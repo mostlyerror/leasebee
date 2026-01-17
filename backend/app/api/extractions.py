@@ -1,0 +1,372 @@
+"""Extraction API endpoints."""
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from sqlalchemy.orm import Session
+from typing import List
+from datetime import datetime
+
+from app.core.database import get_db
+from app.models.lease import Lease, LeaseStatus
+from app.models.extraction import Extraction
+from app.models.field_correction import FieldCorrection
+from app.schemas.pydantic_schemas import (
+    ExtractionResponse,
+    ExtractionUpdate,
+    FieldCorrectionCreate,
+    FieldCorrectionResponse,
+    ExportRequest,
+    ExportResponse,
+    FieldSchemaResponse,
+    FieldDefinition,
+)
+from app.schemas.field_schema import LEASE_FIELDS, FieldCategory
+from app.services.storage_service import storage_service
+from app.services.claude_service import claude_service
+
+router = APIRouter()
+
+
+@router.post("/extract/{lease_id}", response_model=ExtractionResponse, status_code=status.HTTP_201_CREATED)
+async def extract_lease_data(
+    lease_id: int,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
+    """
+    Extract data from a lease PDF using Claude.
+
+    Args:
+        lease_id: Lease ID to extract
+        background_tasks: FastAPI background tasks
+        db: Database session
+
+    Returns:
+        Created extraction object
+
+    Raises:
+        HTTPException: If lease not found or extraction fails
+    """
+    # Get lease
+    lease = db.query(Lease).filter(Lease.id == lease_id).first()
+    if not lease:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lease not found"
+        )
+
+    # Check if already processing
+    if lease.status == LeaseStatus.PROCESSING:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Lease is already being processed"
+        )
+
+    # Update status to processing
+    lease.status = LeaseStatus.PROCESSING
+    db.commit()
+
+    try:
+        # Download PDF from storage
+        pdf_bytes = storage_service.download_pdf(lease.file_path)
+
+        # Extract data using Claude
+        result = claude_service.extract_lease_data(pdf_bytes)
+
+        # Create extraction record
+        extraction = Extraction(
+            lease_id=lease_id,
+            extractions=result['extractions'],
+            reasoning=result.get('reasoning'),
+            citations=result.get('citations'),
+            confidence=result.get('confidence'),
+            model_version=result['metadata']['model_version'],
+            prompt_version=result['metadata']['prompt_version'],
+            input_tokens=result['metadata']['input_tokens'],
+            output_tokens=result['metadata']['output_tokens'],
+            total_cost=result['metadata']['total_cost'],
+            processing_time_seconds=result['metadata']['processing_time_seconds'],
+        )
+
+        db.add(extraction)
+
+        # Update lease status
+        lease.status = LeaseStatus.COMPLETED
+        lease.processed_at = datetime.utcnow()
+
+        db.commit()
+        db.refresh(extraction)
+
+        return extraction
+
+    except Exception as e:
+        # Update lease status to failed
+        lease.status = LeaseStatus.FAILED
+        lease.error_message = str(e)
+        db.commit()
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Extraction failed: {str(e)}"
+        )
+
+
+@router.get("/lease/{lease_id}", response_model=List[ExtractionResponse])
+async def get_lease_extractions(
+    lease_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get all extractions for a lease.
+
+    Args:
+        lease_id: Lease ID
+        db: Database session
+
+    Returns:
+        List of extraction objects
+
+    Raises:
+        HTTPException: If lease not found
+    """
+    lease = db.query(Lease).filter(Lease.id == lease_id).first()
+    if not lease:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lease not found"
+        )
+
+    extractions = db.query(Extraction).filter(
+        Extraction.lease_id == lease_id
+    ).order_by(Extraction.created_at.desc()).all()
+
+    return extractions
+
+
+@router.get("/{extraction_id}", response_model=ExtractionResponse)
+async def get_extraction(
+    extraction_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get a specific extraction by ID.
+
+    Args:
+        extraction_id: Extraction ID
+        db: Database session
+
+    Returns:
+        Extraction object
+
+    Raises:
+        HTTPException: If extraction not found
+    """
+    extraction = db.query(Extraction).filter(Extraction.id == extraction_id).first()
+    if not extraction:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Extraction not found"
+        )
+    return extraction
+
+
+@router.patch("/{extraction_id}", response_model=ExtractionResponse)
+async def update_extraction(
+    extraction_id: int,
+    update_data: ExtractionUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Update extraction data (after user review/editing).
+
+    This endpoint is called when users make corrections to the extracted data.
+    It updates the extraction and creates field correction records for learning.
+
+    Args:
+        extraction_id: Extraction ID
+        update_data: Updated extraction data
+        db: Database session
+
+    Returns:
+        Updated extraction object
+
+    Raises:
+        HTTPException: If extraction not found
+    """
+    extraction = db.query(Extraction).filter(Extraction.id == extraction_id).first()
+    if not extraction:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Extraction not found"
+        )
+
+    # Track corrections
+    original_extractions = extraction.extractions
+    new_extractions = update_data.extractions
+
+    # Find and record corrections
+    for field_path, new_value in new_extractions.items():
+        original_value = original_extractions.get(field_path)
+
+        # Only create correction if value changed
+        if original_value != new_value:
+            correction = FieldCorrection(
+                extraction_id=extraction_id,
+                field_path=field_path,
+                original_value=str(original_value) if original_value is not None else None,
+                corrected_value=str(new_value) if new_value is not None else None,
+                original_confidence=extraction.confidence.get(field_path) if extraction.confidence else None,
+                original_reasoning=extraction.reasoning.get(field_path) if extraction.reasoning else None,
+            )
+            db.add(correction)
+
+    # Update extraction
+    extraction.extractions = new_extractions
+
+    # Update lease status to reviewed
+    extraction.lease.status = LeaseStatus.REVIEWED
+
+    db.commit()
+    db.refresh(extraction)
+
+    return extraction
+
+
+@router.post("/{extraction_id}/corrections", response_model=FieldCorrectionResponse)
+async def create_field_correction(
+    extraction_id: int,
+    correction_data: FieldCorrectionCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Create a field correction with user feedback.
+
+    Args:
+        extraction_id: Extraction ID
+        correction_data: Correction data
+        db: Database session
+
+    Returns:
+        Created field correction object
+
+    Raises:
+        HTTPException: If extraction not found
+    """
+    extraction = db.query(Extraction).filter(Extraction.id == extraction_id).first()
+    if not extraction:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Extraction not found"
+        )
+
+    correction = FieldCorrection(
+        extraction_id=extraction_id,
+        **correction_data.dict()
+    )
+
+    db.add(correction)
+    db.commit()
+    db.refresh(correction)
+
+    return correction
+
+
+@router.get("/{extraction_id}/corrections", response_model=List[FieldCorrectionResponse])
+async def get_extraction_corrections(
+    extraction_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get all corrections for an extraction.
+
+    Args:
+        extraction_id: Extraction ID
+        db: Database session
+
+    Returns:
+        List of field correction objects
+    """
+    corrections = db.query(FieldCorrection).filter(
+        FieldCorrection.extraction_id == extraction_id
+    ).all()
+
+    return corrections
+
+
+@router.post("/{extraction_id}/export", response_model=ExportResponse)
+async def export_extraction(
+    extraction_id: int,
+    export_request: ExportRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Export extraction data in specified format.
+
+    Args:
+        extraction_id: Extraction ID
+        export_request: Export options
+        db: Database session
+
+    Returns:
+        Exported data
+
+    Raises:
+        HTTPException: If extraction not found
+    """
+    extraction = db.query(Extraction).filter(Extraction.id == extraction_id).first()
+    if not extraction:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Extraction not found"
+        )
+
+    # Build export data
+    export_data = {
+        "extractions": extraction.extractions,
+    }
+
+    if export_request.include_citations and extraction.citations:
+        export_data["citations"] = extraction.citations
+
+    if export_request.include_reasoning and extraction.reasoning:
+        export_data["reasoning"] = extraction.reasoning
+
+    # Add metadata
+    metadata = {
+        "lease_id": extraction.lease_id,
+        "extraction_id": extraction.id,
+        "lease_filename": extraction.lease.original_filename,
+        "extracted_at": extraction.created_at.isoformat(),
+        "model_version": extraction.model_version,
+    }
+
+    return ExportResponse(
+        data=export_data,
+        metadata=metadata
+    )
+
+
+@router.get("/schema/fields", response_model=FieldSchemaResponse)
+async def get_field_schema():
+    """
+    Get the field schema definition.
+
+    Returns:
+        Field schema with all field definitions
+    """
+    fields = [
+        FieldDefinition(
+            path=f['path'],
+            label=f['label'],
+            category=f['category'].value,
+            type=f['type'].value,
+            description=f['description'],
+            required=f.get('required', False)
+        )
+        for f in LEASE_FIELDS
+    ]
+
+    categories = list(set(f['category'].value for f in LEASE_FIELDS))
+
+    return FieldSchemaResponse(
+        fields=fields,
+        categories=categories
+    )

@@ -1,0 +1,59 @@
+"""Application configuration settings."""
+from typing import List
+from pydantic_settings import BaseSettings
+from pydantic import validator
+
+
+class Settings(BaseSettings):
+    """Application settings loaded from environment variables."""
+
+    # Application
+    APP_NAME: str = "LeaseBee API"
+    VERSION: str = "0.1.0"
+    ENVIRONMENT: str = "development"
+    DEBUG: bool = True
+    SECRET_KEY: str
+
+    # Database
+    DATABASE_URL: str
+
+    # Anthropic API
+    ANTHROPIC_API_KEY: str
+    ANTHROPIC_MODEL: str = "claude-3-5-sonnet-20241022"
+
+    # AWS S3
+    AWS_ACCESS_KEY_ID: str
+    AWS_SECRET_ACCESS_KEY: str
+    AWS_REGION: str = "us-east-1"
+    S3_BUCKET_NAME: str
+
+    # CORS
+    CORS_ORIGINS: str = "http://localhost:3000"
+
+    # File Upload
+    MAX_UPLOAD_SIZE_MB: int = 50
+    ALLOWED_FILE_TYPES: str = "application/pdf"
+
+    @validator("CORS_ORIGINS", pre=True)
+    def assemble_cors_origins(cls, v: str) -> List[str]:
+        """Parse CORS origins from comma-separated string."""
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",")]
+        return v
+
+    @property
+    def max_upload_size_bytes(self) -> int:
+        """Convert MB to bytes."""
+        return self.MAX_UPLOAD_SIZE_MB * 1024 * 1024
+
+    @property
+    def allowed_file_types_list(self) -> List[str]:
+        """Parse allowed file types."""
+        return [ft.strip() for ft in self.ALLOWED_FILE_TYPES.split(",")]
+
+    class Config:
+        env_file = ".env"
+        case_sensitive = True
+
+
+settings = Settings()
