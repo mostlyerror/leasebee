@@ -1,0 +1,1 @@
+"""LeaseBee test suite."""
