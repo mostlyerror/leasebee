@@ -16,7 +16,8 @@ help:
 	@echo "  make dev              Start both backend and frontend (new tabs)"
 	@echo "  make dev-backend      Start backend server only"
 	@echo "  make dev-frontend     Start frontend dev server only"
-	@echo "  make stop             Stop all running servers"
+	@echo "  make stop             Stop all running servers
+  make restart          Restart servers (stop + wait + start)"
 	@echo ""
 	@echo "Testing:"
 	@echo "  make test             Run all tests"
@@ -96,6 +97,13 @@ stop:
 	@pkill -f "uvicorn app.main:app" 2>/dev/null || true
 	@pkill -f "next dev" 2>/dev/null || true
 	@echo "✅ Servers stopped"
+
+# Restart servers (stop + wait + start)
+restart:
+	@echo "🔄 Restarting LeaseBee servers..."
+	@$(MAKE) stop
+	@sleep 2
+	@$(MAKE) dev
 
 # ============================================================================
 # Testing
