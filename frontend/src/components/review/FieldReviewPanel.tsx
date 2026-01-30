@@ -62,13 +62,13 @@ export function FieldReviewPanel({
     return acc;
   }, {} as Record<string, FieldValue[]>);
 
-  const handleExpand = (fieldPath: string) => {
+  const handleExpand = (fieldPath: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     setExpandedField(expandedField === fieldPath ? null : fieldPath);
   };
 
   const handleFieldClick = (field: FieldValue) => {
     onFieldClick(field.path);
-    setExpandedField(field.path);
   };
 
   const handleStartEdit = (field: FieldValue) => {
@@ -81,12 +81,19 @@ export function FieldReviewPanel({
     setEditingField(null);
   };
 
-  const handleAccept = (fieldPath: string) => {
+  const handleAccept = (fieldPath: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     onFeedback(fieldPath, true);
   };
 
-  const handleReject = (fieldPath: string) => {
+  const handleReject = (fieldPath: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     onFeedback(fieldPath, false);
+  };
+
+  const handleEditClick = (field: FieldValue, e: React.MouseEvent) => {
+    e.stopPropagation();
+    handleStartEdit(field);
   };
 
   return (
@@ -122,14 +129,15 @@ export function FieldReviewPanel({
                       isActive ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
                     } ${isAccepted ? 'bg-green-50' : ''} ${isRejected ? 'bg-red-50' : ''}`}
                   >
-                    {/* Field Header */}
+                    {/* Field Header - Click to jump to PDF source */}
                     <div
                       className="px-4 py-3 cursor-pointer hover:bg-gray-50"
                       onClick={() => handleFieldClick(field)}
                     >
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
+                          {/* Label and Confidence */}
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-sm font-medium text-gray-900">
                               {field.label}
                             </span>
@@ -185,23 +193,58 @@ export function FieldReviewPanel({
                           )}
                         </div>
 
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleExpand(field.path);
-                          }}
-                          className="ml-2 text-gray-400 hover:text-gray-600"
-                        >
-                          {isExpanded ? (
-                            <ChevronUp className="w-5 h-5" />
-                          ) : (
-                            <ChevronDown className="w-5 h-5" />
-                          )}
-                        </button>
+                        {/* Action Buttons - Always Visible */}
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={(e) => handleAccept(field.path, e)}
+                            className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded ${
+                              isAccepted
+                                ? 'bg-green-600 text-white'
+                                : 'bg-white border border-gray-300 text-gray-700 hover:bg-green-50'
+                            }`}
+                            title="Accept extraction"
+                          >
+                            <Check className="w-3 h-3" />
+                            <span className="hidden sm:inline">Accept</span>
+                          </button>
+                          <button
+                            onClick={(e) => handleReject(field.path, e)}
+                            className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded ${
+                              isRejected
+                                ? 'bg-red-600 text-white'
+                                : 'bg-white border border-gray-300 text-gray-700 hover:bg-red-50'
+                            }`}
+                            title="Reject extraction"
+                          >
+                            <X className="w-3 h-3" />
+                            <span className="hidden sm:inline">Reject</span>
+                          </button>
+                          <button
+                            onClick={(e) => handleEditClick(field, e)}
+                            className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded bg-white border border-gray-300 text-gray-700 hover:bg-blue-50"
+                            title="Edit value"
+                          >
+                            <AlertCircle className="w-3 h-3" />
+                            <span className="hidden sm:inline">Edit</span>
+                          </button>
+                          
+                          {/* Expand button for details */}
+                          <button
+                            onClick={(e) => handleExpand(field.path, e)}
+                            className="ml-1 p-1 text-gray-400 hover:text-gray-600"
+                            title="View reasoning and source"
+                          >
+                            {isExpanded ? (
+                              <ChevronUp className="w-5 h-5" />
+                            ) : (
+                              <ChevronDown className="w-5 h-5" />
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Expanded Details */}
+                    {/* Expanded Details - Reasoning & Citation only */}
                     {isExpanded && (
                       <div className="px-4 pb-4 border-t bg-gray-50">
                         {/* Reasoning */}
@@ -229,39 +272,6 @@ export function FieldReviewPanel({
                             </blockquote>
                           </div>
                         )}
-
-                        {/* Action Buttons */}
-                        <div className="mt-4 flex gap-2">
-                          <button
-                            onClick={() => handleAccept(field.path)}
-                            className={`flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded ${
-                              isAccepted
-                                ? 'bg-green-600 text-white'
-                                : 'bg-white border border-gray-300 text-gray-700 hover:bg-green-50'
-                            }`}
-                          >
-                            <Check className="w-4 h-4" />
-                            Accept
-                          </button>
-                          <button
-                            onClick={() => handleReject(field.path)}
-                            className={`flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded ${
-                              isRejected
-                                ? 'bg-red-600 text-white'
-                                : 'bg-white border border-gray-300 text-gray-700 hover:bg-red-50'
-                            }`}
-                          >
-                            <X className="w-4 h-4" />
-                            Reject
-                          </button>
-                          <button
-                            onClick={() => handleStartEdit(field)}
-                            className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded bg-white border border-gray-300 text-gray-700 hover:bg-blue-50"
-                          >
-                            <AlertCircle className="w-4 h-4" />
-                            Edit
-                          </button>
-                        </div>
                       </div>
                     )}
                   </div>
