@@ -1,15 +1,15 @@
 {
   "description": "Gold standard test set for extraction accuracy measurement",
-  "version": "1.0",
+  "version": "1.1",
   "created_at": "2026-01-28",
   "leases": [
     {
       "lease_id": "sample_lease_001",
       "filename": "sample_lease.pdf",
-      "description": "Sample office lease - Tech Center Plaza",
+      "description": "Sample office lease - Tech Center Plaza (3-page truncated version)",
       "gold_standard": {
         "basic_info.lease_type": "Office",
-        "basic_info.execution_date": "2023-12-15",
+        "basic_info.execution_date": null,
         "parties.landlord_name": "Property Management LLC",
         "parties.landlord_address": "456 Commercial Plaza, San Francisco, CA 94102",
         "parties.tenant_name": "Acme Corporation",
@@ -31,25 +31,28 @@
         "operating_expenses.base_year": null,
         "operating_expenses.tenant_share_percentage": null,
         "financial.security_deposit": "30000.00",
-        "financial.tenant_improvement_allowance": "50000.00",
+        "financial.tenant_improvement_allowance": null,
         "rights.renewal_options": "Two 12-month options with 180 days advance notice",
         "rights.termination_rights": null,
         "rights.expansion_rights": null,
-        "use.permitted_use": "Office Space",
+        "use.permitted_use": null,
         "use.exclusive_use": null,
-        "maintenance.landlord_responsibilities": "Exterior of building, common areas, structural elements, roof, and building systems",
-        "maintenance.tenant_responsibilities": "Interior of the Premises including all fixtures, equipment, and improvements installed by Tenant",
+        "maintenance.landlord_responsibilities": null,
+        "maintenance.tenant_responsibilities": null,
         "insurance.tenant_insurance_requirements": null,
-        "other.parking_spaces": "10",
-        "other.parking_cost": "0"
-      }
+        "other.parking_spaces": null,
+        "other.parking_cost": null
+      },
+      "notes": [
+        "This is a truncated 3-page lease sample",
+        "Fields set to null are NOT present in the PDF (not extraction errors)",
+        "Missing: signature page, exhibits, maintenance section, permitted use clause, parking"
+      ]
     }
   ],
   "notes": [
-    "This is a test with the sample_lease.pdf",
-    "All dates in ISO format (YYYY-MM-DD)",
-    "All currency values as numeric with 2 decimal places",
-    "All areas as numeric square feet",
-    "null values indicate field not present in document"
+    "Updated to match actual PDF content - many fields are genuinely not present",
+    "This tests extraction accuracy on available content, not hallucination",
+    "For full lease testing, use a complete lease document with all sections"
   ]
 }

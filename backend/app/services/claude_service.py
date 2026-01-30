@@ -16,7 +16,7 @@ class ClaudeService:
         """Initialize Anthropic client."""
         self.client = Anthropic(api_key=settings.ANTHROPIC_API_KEY)
         self.model = settings.ANTHROPIC_MODEL
-        self.prompt_version = "1.0"  # Track prompt versions for learning
+        self.prompt_version = "1.1"  # Enhanced field extraction guidance
 
     def extract_lease_data(
         self,
@@ -437,6 +437,14 @@ FIELD SCHEMA:
         return """
 === CRITICAL EXTRACTION GUIDELINES ===
 
+EXECUTION DATE (basic_info.execution_date):
+-- CRITICAL: Check signature blocks at the end of the document
+-- Look for: "Dated:", "Executed:", "Date Signed:" near signatures
+-- Common locations: Last page, signature page, execution clause
+-- Format: YYYY-MM-DD (convert from "December 15, 2023" → "2023-12-15")
+-- If different dates for landlord/tenant, use the later date
+-- If "as of" date precedes signatures, that's the execution date
+
 DATES:
 - Format: Always return ISO format YYYY-MM-DD
 - Common locations: Look in "Term", "Lease Period", or first page summary
@@ -452,6 +460,15 @@ CURRENCY (Rent, Deposits, Allowances):
 - Free rent: If "first month free" or rent abatement, note in reasoning
 - Escalations: Extract base rent separate from escalated amounts
 - Confidence: High (0.95+) if in table/schedule, Medium (0.7-0.9) if in paragraph
+
+TENANT IMPROVEMENT ALLOWANCE (financial.tenant_improvement_allowance):
+- CRITICAL: Check exhibits, schedules, and work letter attachments
+- Look for: "TI Allowance", "Improvement Allowance", "Construction Allowance"
+- Common locations: Exhibit A, Work Letter, Construction Rider, Lease Schedule
+- Also check: "Landlord shall provide", "allowance for improvements", "build-out allowance"
+- Format: Numeric value only (e.g., "50000.00" not "$50,000" or "50k")
+- If stated as "per square foot", multiply by total square footage
+- If not mentioned anywhere, set to null with reasoning "Not specified in lease"
 
 SQUARE FOOTAGE / AREA:
 - Format: Numeric value only, no "SF" or "square feet" (e.g., "5000")
@@ -489,6 +506,33 @@ BOOLEAN FIELDS:
 - Look for: "NNN", "gross lease", "shall"/"shall not"
 - If ambiguous or unclear, set to null
 - Confidence: Only high (0.9+) if explicitly stated
+
+PERMITTED USE (use.permitted_use):
+- Look for: "Use", "Permitted Use", "Purpose", "Use Restrictions" clauses
+- Common locations: Section on Use, early in the lease, or exhibit
+- Extract the full description (e.g., "General office use", "Retail sales of consumer goods")
+- Include any restrictions: "and no other purpose", "only for", "restricted to"
+- If broad/generic like "any lawful purpose", extract that exact phrase
+- If multiple uses listed, include all separated by commas
+
+MAINTENANCE RESPONSIBILITIES (maintenance.landlord_responsibilities, maintenance.tenant_responsibilities):
+- CRITICAL: Check "Maintenance", "Repairs", "Services" sections carefully
+- Look for: Exhibits on maintenance, schedules outlining responsibilities
+- Landlord typically: HVAC, structural, roof, exterior, common areas, building systems
+- Tenant typically: Interior, fixtures, glass, non-structural elements
+- Extract: Full description of each party's responsibilities
+- Example format: "Landlord: HVAC, roof, structural. Tenant: interior, fixtures, cleaning"
+- Check both: Main lease body AND exhibits/schedules
+- If responsibilities are split by item, list items for each party
+
+PARKING (other.parking_spaces, other.parking_cost):
+- CRITICAL: Check exhibits, schedules, and "Parking" sections
+- Common locations: Exhibit B (Parking), Lease Schedule, Amenities section
+- Look for: "parking spaces", "parking allocation", "parking rights"
+- parking_spaces: Number only (e.g., "10" not "10 spaces")
+- parking_cost: "0" if free/included, otherwise numeric value
+- If "unassigned" or "shared", note in reasoning but extract available count
+- Check: "Tenant shall have the right to use X parking spaces"
 
 COMPLEX TERMS (Renewal Options, Termination Rights):
 - Extract: Number of options, duration, advance notice required, conditions
@@ -562,6 +606,41 @@ Field: operating_expenses.tenant_share_percentage
 Correct Value: "0.125"
 Reasoning: "Tenant's share explicitly stated as 12.5%"
 Confidence: 0.98
+
+Example 7 - Execution Date (check signature page!):
+Source: "Dated: December 15, 2023" [below Landlord signature]
+Field: basic_info.execution_date
+Correct Value: "2023-12-15"
+Reasoning: "Execution date found on signature page below Landlord signature"
+Confidence: 0.98
+
+Example 8 - Tenant Improvement Allowance (check exhibits!):
+Source: "Landlord shall provide a tenant improvement allowance of Fifty Thousand Dollars ($50,000.00) as set forth in Exhibit A"
+Field: financial.tenant_improvement_allowance
+Correct Value: "50000.00"
+Reasoning: "TI allowance explicitly stated in Work Letter (Exhibit A)"
+Confidence: 0.97
+
+Example 9 - Permitted Use:
+Source: "Tenant shall use the Premises solely for general office purposes and for no other use whatsoever"
+Field: use.permitted_use
+Correct Value: "General office purposes"
+Reasoning: "Permitted use explicitly restricted to general office purposes"
+Confidence: 0.95
+
+Example 10 - Maintenance Responsibilities:
+Source: "Landlord shall maintain the structural elements, roof, and building systems. Tenant shall maintain the interior of the Premises."
+Field: maintenance.landlord_responsibilities
+Correct Value: "Structural elements, roof, and building systems"
+Reasoning: "Landlord responsibilities explicitly listed in Maintenance section"
+Confidence: 0.94
+
+Example 11 - Parking (check exhibits/schedules!):
+Source: "Tenant shall have the right to use ten (10) unassigned parking spaces in the building parking garage at no additional charge"
+Field: other.parking_spaces
+Correct Value: "10"
+Reasoning: "Parking spaces explicitly stated in Exhibit B (Parking)"
+Confidence: 0.96
 """
 
     def _get_null_value_guidance(self) -> str:
