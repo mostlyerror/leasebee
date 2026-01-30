@@ -245,7 +245,11 @@ export function FieldReviewPanel({
                     </div>
 
                     {/* Expanded Details - Reasoning & Citation only */}
-                    {isExpanded && (
+                    <div 
+                      className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                        isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                      }`}
+                    >
                       <div className="px-4 pb-4 border-t bg-gray-50">
                         {/* Reasoning */}
                         {field.reasoning && (
@@ -273,7 +277,7 @@ export function FieldReviewPanel({
                           </div>
                         )}
                       </div>
-                    )}
+                    </div>}
                   </div>
                 );
               })}
