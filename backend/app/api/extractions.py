@@ -22,6 +22,7 @@ from app.schemas.field_schema import LEASE_FIELDS, FieldCategory, get_field_by_p
 from app.services.storage_service import storage_service
 from app.services.claude_service import claude_service
 from app.services.validation_service import validation_service
+from app.services.progress_tracker import create_tracker, get_tracker, remove_tracker, ExtractionStage
 
 router = APIRouter()
 
@@ -48,9 +49,14 @@ async def extract_lease_data(
     Raises:
         HTTPException: If lease not found or extraction fails
     """
+    # Create progress tracker using lease_id as operation_id
+    operation_id = str(lease_id)
+    tracker = create_tracker(operation_id)
+    
     # Get lease
     lease = db.query(Lease).filter(Lease.id == lease_id).first()
     if not lease:
+        remove_tracker(operation_id)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Lease not found"
@@ -58,6 +64,7 @@ async def extract_lease_data(
 
     # Check if already processing
     if lease.status == LeaseStatus.PROCESSING:
+        remove_tracker(operation_id)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Lease is already being processed"
@@ -68,15 +75,22 @@ async def extract_lease_data(
     db.commit()
 
     try:
-        # Download PDF from storage
+        # Stage: Extracting text from PDF
+        tracker.advance_stage(ExtractionStage.EXTRACTING_TEXT)
         pdf_bytes = storage_service.download_pdf(lease.file_path)
 
+        # Stage: AI Analyzing
+        tracker.advance_stage(ExtractionStage.ANALYZING)
+        
         # Extract data using Claude (with multi-pass if enabled)
         if use_multi_pass:
             result = claude_service.extract_lease_data_with_refinement(pdf_bytes)
         else:
             result = claude_service.extract_lease_data(pdf_bytes)
 
+        # Stage: Parsing results
+        tracker.advance_stage(ExtractionStage.PARSING)
+        
         # Validate and normalize extracted values
         extractions_dict = result['extractions']
         reasoning_dict = result.get('reasoning', {})
@@ -118,6 +132,12 @@ async def extract_lease_data(
         if 'metadata' not in result:
             result['metadata'] = {}
         result['metadata']['validation_warnings'] = validation_warnings
+        
+        # Stage: Validating
+        tracker.advance_stage(ExtractionStage.VALIDATING)
+        
+        # Stage: Saving
+        tracker.advance_stage(ExtractionStage.SAVING)
 
         # Create extraction record
         extraction = Extraction(
@@ -143,6 +163,10 @@ async def extract_lease_data(
 
         db.commit()
         db.refresh(extraction)
+        
+        # Complete progress tracking
+        tracker.advance_stage(ExtractionStage.COMPLETE)
+        remove_tracker(operation_id)
 
         return extraction
 
@@ -151,6 +175,9 @@ async def extract_lease_data(
         lease.status = LeaseStatus.FAILED
         lease.error_message = str(e)
         db.commit()
+        
+        # Clean up progress tracker
+        remove_tracker(operation_id)
 
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -419,3 +446,31 @@ async def get_field_schema():
         fields=fields,
         categories=categories
     )
+
+
+@router.get("/progress/{operation_id}")
+async def get_extraction_progress(operation_id: str):
+    """
+    Get progress of an ongoing extraction operation.
+    
+    Args:
+        operation_id: The operation ID (use lease_id as operation_id)
+        
+    Returns:
+        Progress information including stage, percentage, and time estimates
+    """
+    tracker = get_tracker(operation_id)
+    if not tracker:
+        # If no tracker found, extraction might be complete or not started
+        return {
+            "operation_id": operation_id,
+            "stage": "unknown",
+            "stage_description": "Extraction status unknown",
+            "percentage": 0,
+            "elapsed_seconds": 0,
+            "estimated_remaining_seconds": 0,
+            "tip": "Waiting to start...",
+            "completed_stages": [],
+        }
+    
+    return tracker.get_progress()

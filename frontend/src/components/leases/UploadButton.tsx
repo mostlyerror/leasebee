@@ -6,6 +6,7 @@ import { leaseApi, extractionApi, handleApiError } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Upload, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { ExtractionProgress } from '@/components/ui/ExtractionProgress';
 
 interface UploadButtonProps {
   onUploadComplete?: () => void;
@@ -14,26 +15,38 @@ interface UploadButtonProps {
 export function UploadButton({ onUploadComplete }: UploadButtonProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadProgress, setUploadProgress] = useState<string>('');
+  const [uploadStage, setUploadStage] = useState<'idle' | 'uploading' | 'extracting' | 'complete'>('idle');
+  const [currentLeaseId, setCurrentLeaseId] = useState<number | null>(null);
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
-      setUploadProgress('Uploading PDF...');
+      // Stage 1: Upload PDF
+      setUploadStage('uploading');
       const lease = await leaseApi.upload(file);
+      setCurrentLeaseId(lease.id);
 
-      setUploadProgress('Extracting data with AI...');
+      // Stage 2: Extract data (this takes a while)
+      setUploadStage('extracting');
       const extraction = await extractionApi.extract(lease.id);
 
       return { lease, extraction };
     },
     onSuccess: ({ lease }) => {
-      setUploadProgress('');
+      setUploadStage('complete');
       onUploadComplete?.();
       // Navigate to the review page for human-in-the-loop verification
-      router.push(`/review/${lease.id}`);
+      setTimeout(() => {
+        router.push(`/review/${lease.id}`);
+        // Reset state after navigation
+        setTimeout(() => {
+          setUploadStage('idle');
+          setCurrentLeaseId(null);
+        }, 500);
+      }, 500);
     },
     onError: (error: any) => {
-      setUploadProgress('');
+      setUploadStage('idle');
+      setCurrentLeaseId(null);
       alert(`Upload failed: ${handleApiError(error)}`);
     },
   });
@@ -53,6 +66,31 @@ export function UploadButton({ onUploadComplete }: UploadButtonProps) {
     fileInputRef.current?.click();
   };
 
+  const handleProgressComplete = () => {
+    // Progress component detected completion
+    if (currentLeaseId) {
+      router.push(`/review/${currentLeaseId}`);
+      setTimeout(() => {
+        setUploadStage('idle');
+        setCurrentLeaseId(null);
+      }, 500);
+    }
+  };
+
+  // Show progress overlay during extraction
+  if (uploadStage === 'extracting' && currentLeaseId) {
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="w-full max-w-2xl">
+          <ExtractionProgress 
+            leaseId={currentLeaseId} 
+            onComplete={handleProgressComplete}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <input
@@ -70,7 +108,7 @@ export function UploadButton({ onUploadComplete }: UploadButtonProps) {
         {uploadMutation.isPending ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            {uploadProgress}
+            {uploadStage === 'uploading' ? 'Uploading PDF...' : 'Processing...'}
           </>
         ) : (
           <>
