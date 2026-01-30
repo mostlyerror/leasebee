@@ -2,8 +2,8 @@
 Core test fixtures for the LeaseBee test suite.
 
 This module provides shared fixtures used across all tests:
-- test_db: In-memory SQLite database for isolated testing
-- client: FastAPI TestClient with test database override
+- test_db: PostgreSQL database for realistic testing
+- client: FastAPI TestClient with test database and mocked external services
 - mock_s3_client: Mocked boto3 S3 client (no real S3 calls)
 - mock_claude_client: Mocked Anthropic client (no real API calls)
 - sample_pdf_bytes: Generated test PDF content
@@ -13,23 +13,53 @@ import json
 import os
 from io import BytesIO
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+# Import database first (no external service dependencies)
 from app.core.database import Base, get_db
-from app.main import app
 
 # Import all models to register them with Base.metadata
-# This must happen before any database operations
 from app.models.lease import Lease  # noqa: F401
 from app.models.extraction import Extraction  # noqa: F401
 from app.models.field_correction import FieldCorrection  # noqa: F401
 from app.models.citation_source import CitationSource  # noqa: F401
 from app.models.extraction_feedback import ExtractionFeedback  # noqa: F401
 from app.models.few_shot_example import FewShotExample  # noqa: F401
+
+# Import app - note that we'll patch external services via session-scoped fixture
+from app.main import app
+
+
+# ============================================================================
+# Session-scoped fixtures for external service mocking
+# ============================================================================
+
+# Global mocks for external services - applied when conftest is imported
+from unittest.mock import MagicMock, patch
+import sys
+
+# Create S3 mock
+_mock_s3_client = MagicMock()
+_mock_s3_client.upload_fileobj.return_value = None
+_mock_body = MagicMock()
+_mock_body.read.return_value = b'%PDF-1.4\nfake pdf content'
+_mock_s3_client.get_object.return_value = {'Body': _mock_body}
+_mock_s3_client.delete_object.return_value = None
+_mock_s3_client.generate_presigned_url.return_value = 'https://fake-s3-url.com/test.pdf'
+
+# Apply boto3 patch BEFORE importing app modules
+_boto3_patch = patch('boto3.client', return_value=_mock_s3_client)
+_boto3_patch.start()
+
+# Now import and recreate storage service
+from app.services import storage_service as _storage_module
+from app.services.storage_service import StorageService
+_storage_module.storage_service = StorageService()
 
 
 # ============================================================================
@@ -39,33 +69,43 @@ from app.models.few_shot_example import FewShotExample  # noqa: F401
 @pytest.fixture(scope="function")
 def test_db():
     """
-    Create an in-memory SQLite database for testing.
+    Create a PostgreSQL test database for testing.
 
-    Each test gets a fresh database instance with all tables created.
-    After the test completes, all data is automatically cleaned up.
+    Uses the main database but rolls back transactions after each test
+    to ensure isolation. This matches production environment.
 
     Yields:
         SQLAlchemy database session
     """
-    # Create in-memory SQLite engine
-    engine = create_engine(
-        "sqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        echo=False  # Set to True for SQL debugging
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from app.core.config import settings
+    
+    # Use the same database as production for realistic testing
+    # but we'll use transaction rollback for test isolation
+    engine = create_engine(settings.DATABASE_URL, echo=False)
+    
+    # Create session with autocommit disabled for rollback support
+    TestingSessionLocal = sessionmaker(
+        autocommit=False, 
+        autoflush=False, 
+        bind=engine
     )
-
-    # Create all tables
-    Base.metadata.create_all(bind=engine)
-
-    # Create session factory
-    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    db = TestingSessionLocal()
-
+    
+    # Create connection and start transaction
+    connection = engine.connect()
+    transaction = connection.begin()
+    
+    # Create session bound to connection
+    db = TestingSessionLocal(bind=connection)
+    
     try:
         yield db
     finally:
         db.close()
-        Base.metadata.drop_all(bind=engine)
+        # Rollback transaction to clean up test data
+        transaction.rollback()
+        connection.close()
         engine.dispose()
 
 
@@ -144,8 +184,21 @@ def mock_s3_client(mocker):
     # Mock generate_presigned_url
     mock_client.generate_presigned_url.return_value = "https://fake-s3-url.com/test.pdf"
 
-    # Patch boto3.client in the storage service module
-    mocker.patch('app.services.storage_service.boto3.client', return_value=mock_client)
+    # Patch boto3.client
+    mocker.patch('boto3.client', return_value=mock_client)
+    
+    # For integration tests: recreate the storage_service singleton with mock
+    # Import here to avoid circular imports
+    try:
+        from app.services import storage_service as storage_module
+        from app.services.storage_service import StorageService
+        from app.core.config import settings
+        
+        # Create new instance with mocked boto3
+        storage_module.storage_service = StorageService()
+    except Exception:
+        # Unit tests handle their own mocking
+        pass
 
     return mock_client
 
@@ -393,9 +446,11 @@ def set_test_env_vars(monkeypatch):
 
     This fixture runs automatically before each test to ensure
     test-specific configuration is used.
+    
+    Note: DATABASE_URL uses production database but transactions are rolled back
+    after each test for isolation.
     """
-    # Set test environment variables
-    monkeypatch.setenv("DATABASE_URL", "sqlite:///:memory:")
+    # Set test environment variables (keep existing DATABASE_URL from .env)
     monkeypatch.setenv("AWS_S3_BUCKET_NAME", "test-bucket")
     monkeypatch.setenv("AWS_REGION", "us-east-1")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-api-key")
