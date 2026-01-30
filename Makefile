@@ -57,18 +57,27 @@ install-frontend:
 # Development
 # ============================================================================
 
-# Start both backend and frontend (macOS Terminal.app)
+# Start both backend and frontend in the same terminal with prefixed output
+# Requires: npm install -g concurrently (or it will suggest it)
 dev:
 	@echo "🚀 Starting LeaseBee development servers..."
 	@echo "   Backend:  http://localhost:8000"
 	@echo "   Frontend: http://localhost:3000"
 	@echo ""
+	@which concurrently >/dev/null 2>&1 || (echo "📦 Installing concurrently..." && npm install -g concurrently)
+	@concurrently \
+		--names "BE,FE" \
+		--prefix-colors "blue,green" \
+		--kill-others-on-fail \
+		"cd backend && source venv/bin/activate && uvicorn app.main:app --reload" \
+		"cd frontend && npm run dev"
+
+# Start both in separate Terminal tabs (macOS only)
+dev-tabs:
+	@echo "🚀 Starting LeaseBee in new Terminal tabs..."
 	@osascript -e 'tell application "Terminal" to do script "cd $(PWD)/backend && source venv/bin/activate && uvicorn app.main:app --reload"' \
 		-e 'tell application "Terminal" to do script "cd $(PWD)/frontend && npm run dev"' 2>/dev/null || \
-	(echo "⚠️  Could not open new Terminal tabs. Starting sequentially..." && \
-	 make dev-backend & \
-	 sleep 3 && \
-	 make dev-frontend)
+	echo "❌ Could not open Terminal tabs. Try 'make dev' instead."
 
 # Start only backend
 dev-backend:
