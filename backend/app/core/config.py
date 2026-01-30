@@ -1,7 +1,7 @@
 """Application configuration settings."""
 from typing import List
 from pydantic_settings import BaseSettings
-from pydantic import validator
+from pydantic import field_validator
 
 
 class Settings(BaseSettings):
@@ -19,7 +19,7 @@ class Settings(BaseSettings):
 
     # Anthropic API
     ANTHROPIC_API_KEY: str
-    ANTHROPIC_MODEL: str = "claude-3-5-sonnet-20241022"
+    ANTHROPIC_MODEL: str = "claude-sonnet-4-5-20250929"
 
     # AWS S3
     AWS_ACCESS_KEY_ID: str
@@ -34,12 +34,10 @@ class Settings(BaseSettings):
     MAX_UPLOAD_SIZE_MB: int = 50
     ALLOWED_FILE_TYPES: str = "application/pdf"
 
-    @validator("CORS_ORIGINS", pre=True)
-    def assemble_cors_origins(cls, v: str) -> List[str]:
+    @property
+    def cors_origins_list(self) -> List[str]:
         """Parse CORS origins from comma-separated string."""
-        if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
-        return v
+        return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
 
     @property
     def max_upload_size_bytes(self) -> int:

@@ -28,6 +28,7 @@ class Extraction(Base):
     # Model metadata
     model_version = Column(String, nullable=False)  # e.g., "claude-3-5-sonnet-20241022"
     prompt_version = Column(String, nullable=True)  # For tracking prompt iterations
+    extraction_metadata = Column(JSON, nullable=True)  # {"validation_warnings": {...}, "multi_pass": true, etc.}
 
     # Token usage and cost
     input_tokens = Column(Integer, nullable=True)

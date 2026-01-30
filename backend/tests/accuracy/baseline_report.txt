@@ -1,0 +1,115 @@
+================================================================================
+EXTRACTION ACCURACY REPORT
+================================================================================
+Test Date: 2026-01-30T01:17:56.387559
+Test Type: baseline
+Leases Tested: 1
+
+OVERALL METRICS
+--------------------------------------------------------------------------------
+Overall Accuracy:   73.53%
+Total Fields:          34
+Correct:               25
+Incorrect:              2
+Missing:                7
+
+PER-LEASE ACCURACY
+--------------------------------------------------------------------------------
+Lease ID                  Description                           Accuracy
+--------------------------------------------------------------------------------
+sample_lease_001          Sample office lease - Tech Center P     73.53%
+
+ACCURACY BY FIELD CATEGORY
+--------------------------------------------------------------------------------
+Category                          Correct      Total     Accuracy
+--------------------------------------------------------------------------------
+maintenance                             0          2        0.00%
+other                                   0          2        0.00%
+basic_info                              1          2       50.00%
+financial                               1          2       50.00%
+use                                     1          2       50.00%
+rights                                  2          3       66.67%
+rent                                    4          5       80.00%
+parties                                 4          4      100.00%
+property                                4          4      100.00%
+dates                                   4          4      100.00%
+operating_expenses                      3          3      100.00%
+insurance                               1          1      100.00%
+
+TOP 10 MOST PROBLEMATIC FIELDS
+--------------------------------------------------------------------------------
+1. basic_info.execution_date
+   Errors: 1
+   Examples:
+     - sample_lease_001: missing
+       Expected: 2023-12-15
+
+2. rent.rent_escalations
+   Errors: 1
+   Examples:
+     - sample_lease_001: incorrect
+       Expected: 3% annually on each anniversary of the Commencement Date
+       Got: 3% annual increase on each anniversary of the Commencement Date
+
+3. financial.tenant_improvement_allowance
+   Errors: 1
+   Examples:
+     - sample_lease_001: missing
+       Expected: 50000.00
+
+4. rights.renewal_options
+   Errors: 1
+   Examples:
+     - sample_lease_001: incorrect
+       Expected: Two 12-month options with 180 days advance notice
+       Got: Two 12-month options with 180 days advance written notice, provided Tenant is not in default
+
+5. use.permitted_use
+   Errors: 1
+   Examples:
+     - sample_lease_001: missing
+       Expected: Office Space
+
+6. maintenance.landlord_responsibilities
+   Errors: 1
+   Examples:
+     - sample_lease_001: missing
+       Expected: Exterior of building, common areas, structural elements, roof, and building systems
+
+7. maintenance.tenant_responsibilities
+   Errors: 1
+   Examples:
+     - sample_lease_001: missing
+       Expected: Interior of the Premises including all fixtures, equipment, and improvements installed by Tenant
+
+8. other.parking_spaces
+   Errors: 1
+   Examples:
+     - sample_lease_001: missing
+       Expected: 10
+
+9. other.parking_cost
+   Errors: 1
+   Examples:
+     - sample_lease_001: missing
+       Expected: 0
+
+CONFIDENCE SCORE ANALYSIS
+--------------------------------------------------------------------------------
+Bucket             Correct  Incorrect      Total     Accuracy
+--------------------------------------------------------------------------------
+High                    16          2         18       88.89%
+Medium                   0          0          0        0.00%
+Low                      9          7         16       56.25%
+
+Note: High confidence should correlate with high accuracy.
+If low-confidence fields have high accuracy, confidence calibration may be off.
+
+COST ANALYSIS
+--------------------------------------------------------------------------------
+Total Cost:                $0.0741
+Average Cost per Lease:    $0.0741
+Average Cost per Field:    $0.002179
+Cost per Accurate Field:   $0.002964
+Total Input Tokens:        8,350
+Total Output Tokens:       3,272

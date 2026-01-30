@@ -37,7 +37,7 @@ class FewShotExample(Base):
     created_from_correction_id = Column(Integer, nullable=True)  # Source correction
 
     # Additional context
-    metadata = Column(JSON, nullable=True)  # Flexible field for extra info
+    example_metadata = Column(JSON, nullable=True)  # Flexible field for extra info
 
     def __repr__(self):
         return f"<FewShotExample(id={self.id}, field={self.field_path}, active={self.is_active})>"
