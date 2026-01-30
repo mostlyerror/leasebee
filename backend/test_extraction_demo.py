@@ -189,6 +189,7 @@ def main():
                             correct += 1
                             continue
                     except (ValueError, TypeError):
+                        # If numeric parsing fails, fall back to treating the value as incorrect below.
                         pass
 
                     incorrect += 1
