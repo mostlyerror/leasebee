@@ -1,12 +1,15 @@
 """Lease API endpoints."""
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
+from uuid import UUID
 import os
 
 from app.core.database import get_db
 from app.core.config import settings
+from app.core.dependencies import get_optional_user, get_current_user
 from app.models.lease import Lease, LeaseStatus
+from app.models.user import User
 from app.schemas.pydantic_schemas import LeaseResponse
 from app.services.storage_service import storage_service
 from app.services.pdf_service import pdf_service
@@ -17,14 +20,21 @@ router = APIRouter()
 @router.post("/upload", response_model=LeaseResponse, status_code=status.HTTP_201_CREATED)
 async def upload_lease(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    organization_id: Optional[UUID] = Query(None, description="Organization ID (required if authenticated)"),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     """
     Upload a lease PDF file.
 
+    If authenticated, organization_id is required and the lease will be associated with that organization.
+    If not authenticated, creates a lease without organization (for backward compatibility).
+
     Args:
         file: PDF file to upload
+        organization_id: Organization ID (required if authenticated)
         db: Database session
+        current_user: Current user (optional)
 
     Returns:
         Created lease object
@@ -32,6 +42,17 @@ async def upload_lease(
     Raises:
         HTTPException: If file validation fails or upload fails
     """
+    # If authenticated, require organization_id
+    if current_user and not organization_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="organization_id is required when authenticated"
+        )
+
+    # If organization_id provided, verify user has access
+    if current_user and organization_id:
+        from app.core.dependencies import get_organization_member
+        get_organization_member(organization_id, current_user, db)
     # Validate file type
     if file.content_type not in settings.allowed_file_types_list:
         raise HTTPException(
@@ -80,6 +101,8 @@ async def upload_lease(
         content_type=file.content_type,
         page_count=page_count,
         status=LeaseStatus.UPLOADED,
+        organization_id=organization_id if current_user else None,
+        uploaded_by=current_user.id if current_user else None,
     )
 
     db.add(lease)
@@ -93,40 +116,59 @@ async def upload_lease(
 async def list_leases(
     skip: int = 0,
     limit: int = 100,
-    db: Session = Depends(get_db)
+    organization_id: Optional[UUID] = Query(None, description="Filter by organization ID"),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     """
-    List all leases.
+    List leases.
+
+    If authenticated with organization_id, returns leases for that organization.
+    If not authenticated, returns all leases (for backward compatibility).
 
     Args:
         skip: Number of records to skip
         limit: Maximum number of records to return
+        organization_id: Filter by organization ID
         db: Database session
+        current_user: Current user (optional)
 
     Returns:
         List of lease objects
     """
-    leases = db.query(Lease).order_by(Lease.created_at.desc()).offset(skip).limit(limit).all()
+    query = db.query(Lease)
+
+    # If user is authenticated and organization_id is provided, filter by organization
+    if current_user and organization_id:
+        from app.core.dependencies import get_organization_member
+        get_organization_member(organization_id, current_user, db)
+        query = query.filter(Lease.organization_id == organization_id)
+
+    leases = query.order_by(Lease.created_at.desc()).offset(skip).limit(limit).all()
     return leases
 
 
 @router.get("/{lease_id}", response_model=LeaseResponse)
 async def get_lease(
     lease_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     """
     Get a specific lease by ID.
 
+    If authenticated, verifies user has access to the lease's organization.
+
     Args:
         lease_id: Lease ID
         db: Database session
+        current_user: Current user (optional)
 
     Returns:
         Lease object
 
     Raises:
-        HTTPException: If lease not found
+        HTTPException: If lease not found or access denied
     """
     lease = db.query(Lease).filter(Lease.id == lease_id).first()
     if not lease:
@@ -134,23 +176,33 @@ async def get_lease(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Lease not found"
         )
+
+    # If user is authenticated and lease has organization, verify access
+    if current_user and lease.organization_id:
+        from app.core.dependencies import get_organization_member
+        get_organization_member(lease.organization_id, current_user, db)
+
     return lease
 
 
 @router.delete("/{lease_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_lease(
     lease_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     """
     Delete a lease and its associated file.
 
+    If authenticated, verifies user has access to the lease's organization.
+
     Args:
         lease_id: Lease ID
         db: Database session
+        current_user: Current user (optional)
 
     Raises:
-        HTTPException: If lease not found
+        HTTPException: If lease not found or access denied
     """
     lease = db.query(Lease).filter(Lease.id == lease_id).first()
     if not lease:
@@ -158,6 +210,11 @@ async def delete_lease(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Lease not found"
         )
+
+    # If user is authenticated and lease has organization, verify access
+    if current_user and lease.organization_id:
+        from app.core.dependencies import get_organization_member
+        get_organization_member(lease.organization_id, current_user, db)
 
     # Delete from storage
     try:
