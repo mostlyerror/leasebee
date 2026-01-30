@@ -6,7 +6,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { leaseApi, extractionApi, handleApiError } from '@/lib/api';
 import { PDFViewer } from '@/components/pdf/PDFViewer';
 import { FieldReviewPanel } from '@/components/review/FieldReviewPanel';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, FileText } from 'lucide-react';
 import Link from 'next/link';
 
 interface Citation {
@@ -45,38 +45,32 @@ export default function ReviewPage() {
   const [feedback, setFeedback] = useState<Record<string, FieldFeedback>>({});
   const [pdfUrl, setPdfUrl] = useState<string>('');
 
-  // Fetch lease details
   const { data: lease, isLoading: leaseLoading } = useQuery({
     queryKey: ['lease', leaseId],
     queryFn: () => leaseApi.get(leaseId),
     enabled: !!leaseId,
   });
 
-  // Fetch extraction
   const { data: extraction, isLoading: extractionLoading } = useQuery({
     queryKey: ['extraction', leaseId],
     queryFn: async () => {
       const extractions = await extractionApi.getByLease(leaseId);
-      return extractions[0]; // Get the most recent extraction
+      return extractions[0];
     },
     enabled: !!leaseId,
   });
 
-  // Fetch field schema
   const { data: schema } = useQuery({
     queryKey: ['schema'],
     queryFn: () => extractionApi.getFieldSchema(),
   });
 
-  // Get PDF URL
   useEffect(() => {
     if (lease) {
-      // Use the direct PDF endpoint that streams the file
       setPdfUrl(`${process.env.NEXT_PUBLIC_API_URL}/api/leases/${leaseId}/pdf`);
     }
   }, [lease, leaseId]);
 
-  // Build field values from extraction
   const fieldValues: FieldValue[] = useMemo(() => {
     if (!extraction || !schema) return [];
 
@@ -102,7 +96,6 @@ export default function ReviewPage() {
     return fields;
   }, [extraction, schema]);
 
-  // Build highlights for PDF
   const highlights = useMemo(() => {
     return fieldValues
       .filter((f) => f.citation?.bounding_box)
@@ -114,18 +107,14 @@ export default function ReviewPage() {
       }));
   }, [fieldValues]);
 
-  // Handle field click - scroll to citation
   const handleFieldClick = useCallback((fieldPath: string) => {
     setActiveField(fieldPath);
-    
     const field = fieldValues.find((f) => f.path === fieldPath);
     if (field?.citation?.page && typeof window !== 'undefined') {
-      // Scroll to page
       (window as any).pdfScrollToPage?.(field.citation.page);
     }
   }, [fieldValues]);
 
-  // Handle feedback
   const handleFeedback = useCallback((fieldPath: string, isCorrect: boolean, correctedValue?: any) => {
     setFeedback((prev) => ({
       ...prev,
@@ -137,12 +126,10 @@ export default function ReviewPage() {
     }));
   }, []);
 
-  // Submit feedback mutation
   const submitFeedbackMutation = useMutation({
     mutationFn: async () => {
       if (!extraction) return;
       
-      // Submit each feedback item as a correction
       const promises = Object.values(feedback).map((item) => {
         const field = fieldValues.find((f) => f.path === item.fieldPath);
         if (!field) return null;
@@ -160,7 +147,6 @@ export default function ReviewPage() {
     },
     onSuccess: () => {
       alert('Feedback submitted successfully!');
-      // Reset feedback after successful submission
       setFeedback({});
     },
     onError: (error) => {
@@ -173,42 +159,54 @@ export default function ReviewPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        <Loader2 className="h-12 w-12 animate-spin text-amber-500" />
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col bg-slate-50">
       {/* Header */}
-      <header className="bg-white border-b px-4 py-3 flex items-center justify-between">
+      <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 flex items-center justify-between sticky top-16 z-40">
         <div className="flex items-center gap-4">
           <Link
             href="/"
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            Back
+            <span className="hidden sm:inline">Back</span>
           </Link>
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900">
-              Review: {lease?.original_filename}
-            </h1>
-            <p className="text-sm text-gray-600">
-              AI extraction review with source verification
-            </p>
+          <div className="h-6 w-px bg-slate-200 hidden sm:block" />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <FileText className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold text-slate-900 truncate max-w-[200px] sm:max-w-md">
+                {lease?.original_filename}
+              </h1>
+              <p className="text-xs text-slate-500">
+                Review and verify extracted data
+              </p>
+            </div>
           </div>
         </div>
+        
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">
-            {Object.keys(feedback).length} / {fieldValues.length} reviewed
-          </span>
+          <div className="hidden sm:flex items-center gap-2 text-sm text-slate-600">
+            <span className="font-medium text-slate-900">
+              {Object.keys(feedback).length}
+            </span>
+            <span>/</span>
+            <span>{fieldValues.length}</span>
+            <span className="text-slate-400">reviewed</span>
+          </div>
           <button
             onClick={() => submitFeedbackMutation.mutate()}
-            disabled={Object.keys(feedback).length < fieldValues.length}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 disabled:opacity-50"
+            disabled={Object.keys(feedback).length < fieldValues.length || submitFeedbackMutation.isPending}
+            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-slate-300 text-white text-sm font-medium rounded-lg transition-colors"
           >
-            Submit Review
+            {submitFeedbackMutation.isPending ? 'Submitting...' : 'Submit Review'}
           </button>
         </div>
       </header>
@@ -216,7 +214,7 @@ export default function ReviewPage() {
       {/* Main Content - 2 Pane Layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Pane - PDF Viewer */}
-        <div className="w-1/2 border-r">
+        <div className="w-1/2 border-r border-slate-200 bg-slate-100">
           <PDFViewer
             url={pdfUrl}
             highlights={highlights}
@@ -225,7 +223,7 @@ export default function ReviewPage() {
         </div>
 
         {/* Right Pane - Field Review */}
-        <div className="w-1/2">
+        <div className="w-1/2 bg-white">
           <FieldReviewPanel
             fields={fieldValues}
             activeField={activeField}

@@ -6,8 +6,9 @@ import { Providers } from './providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: '🐝 LeaseBee - Smart Lease Abstraction',
-  description: 'AI-powered commercial lease abstraction. Buzzing through leases in seconds.',
+  title: 'LeaseBee - AI-Powered Lease Abstraction',
+  description: 'Extract 40+ data points from commercial leases in under 2 minutes. Save 70-90% of review time with AI-powered abstraction.',
+  keywords: 'lease abstraction, commercial real estate, AI, document extraction',
 };
 
 export default function RootLayout({
@@ -19,20 +20,26 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Providers>
-          <div className="min-h-screen bg-gray-50">
-            <nav className="bg-white shadow-sm border-b">
+          <div className="min-h-screen bg-slate-50">
+            {/* Navigation */}
+            <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16 items-center">
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-2">🐝</span>
-                    <h1 className="text-xl font-bold text-gray-900">
-                      LeaseBee
-                    </h1>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-sm">
+                      <span className="text-xl">🐝</span>
+                    </div>
+                    <div>
+                      <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
+                        LeaseBee
+                      </h1>
+                      <p className="text-xs text-slate-500 -mt-0.5">AI-Powered Lease Abstraction</p>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-1">
                     <a
                       href="/"
-                      className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                      className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
                     >
                       Dashboard
                     </a>
@@ -40,6 +47,8 @@ export default function RootLayout({
                 </div>
               </div>
             </nav>
+
+            {/* Main Content */}
             <main>{children}</main>
           </div>
         </Providers>

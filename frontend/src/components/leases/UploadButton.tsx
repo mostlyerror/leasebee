@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { leaseApi, extractionApi, handleApiError } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { Upload, Loader2 } from 'lucide-react';
+import { Upload, Loader2, FileUp } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { ExtractionProgress } from '@/components/ui/ExtractionProgress';
 
@@ -20,12 +20,10 @@ export function UploadButton({ onUploadComplete }: UploadButtonProps) {
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
-      // Stage 1: Upload PDF
       setUploadStage('uploading');
       const lease = await leaseApi.upload(file);
       setCurrentLeaseId(lease.id);
 
-      // Stage 2: Extract data (this takes a while)
       setUploadStage('extracting');
       const extraction = await extractionApi.extract(lease.id);
 
@@ -34,10 +32,8 @@ export function UploadButton({ onUploadComplete }: UploadButtonProps) {
     onSuccess: ({ lease }) => {
       setUploadStage('complete');
       onUploadComplete?.();
-      // Navigate to the review page for human-in-the-loop verification
       setTimeout(() => {
         router.push(`/review/${lease.id}`);
-        // Reset state after navigation
         setTimeout(() => {
           setUploadStage('idle');
           setCurrentLeaseId(null);
@@ -67,7 +63,6 @@ export function UploadButton({ onUploadComplete }: UploadButtonProps) {
   };
 
   const handleProgressComplete = () => {
-    // Progress component detected completion
     if (currentLeaseId) {
       router.push(`/review/${currentLeaseId}`);
       setTimeout(() => {
@@ -77,10 +72,9 @@ export function UploadButton({ onUploadComplete }: UploadButtonProps) {
     }
   };
 
-  // Show progress overlay during extraction
   if (uploadStage === 'extracting' && currentLeaseId) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <div className="w-full max-w-2xl">
           <ExtractionProgress 
             leaseId={currentLeaseId} 
@@ -104,15 +98,16 @@ export function UploadButton({ onUploadComplete }: UploadButtonProps) {
         onClick={handleClick}
         disabled={uploadMutation.isPending}
         size="lg"
+        className="bg-amber-500 hover:bg-amber-600 text-white h-11 px-6"
       >
         {uploadMutation.isPending ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            {uploadStage === 'uploading' ? 'Uploading PDF...' : 'Processing...'}
+            {uploadStage === 'uploading' ? 'Uploading...' : 'Processing...'}
           </>
         ) : (
           <>
-            <Upload className="mr-2 h-4 w-4" />
+            <FileUp className="mr-2 h-4 w-4" />
             Upload Lease
           </>
         )}
