@@ -17,10 +17,10 @@ depends_on = None
 
 
 def upgrade():
-    """Add extraction_metadata JSONB column to extractions table."""
-    op.add_column('extractions', sa.Column('extraction_metadata', postgresql.JSON(astext_type=sa.Text()), nullable=True))
+    """Add metadata JSONB column to extractions table."""
+    op.add_column('extractions', sa.Column('metadata', postgresql.JSON(astext_type=sa.Text()), nullable=True))
 
 
 def downgrade():
-    """Remove extraction_metadata column from extractions table."""
-    op.drop_column('extractions', 'extraction_metadata')
+    """Remove metadata column from extractions table."""
+    op.drop_column('extractions', 'metadata')
