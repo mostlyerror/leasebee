@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Detailed review of extraction results."""
-import json
 import sys
 from pathlib import Path
 
