@@ -45,7 +45,7 @@ EDUCATIONAL_TIPS = [
     "📊 Extracted data can be exported directly to Excel or your lease management system.",
     "🔍 The AI looks for specific sections: Parties, Term, Rent, Use, Maintenance, and more.",
     "⏱️  Manual lease review takes 2-4 hours. AI extraction takes under 2 minutes.",
-    "🎯 High confidence scores (>90%) indicate clear, unambiguous text in the document.",",
+    "🎯 High confidence scores (>90%) indicate clear, unambiguous text in the document.",
     "📑 The system extracts not just values, but also the reasoning and source citations.",
     "🔄 Your feedback on extractions helps improve accuracy for future documents.",
 ]
