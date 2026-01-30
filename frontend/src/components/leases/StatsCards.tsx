@@ -1,6 +1,7 @@
 'use client';
 
 import { FileText, Clock, TrendingUp, Zap } from 'lucide-react';
+import { StatsCard } from '@/components/ui/stats-card';
 
 interface StatsCardsProps {
   totalLeases: number;
@@ -17,59 +18,48 @@ function formatTime(minutes: number): string {
 
 export function StatsCards({ totalLeases, processedLeases, timeSaved }: StatsCardsProps) {
   const accuracy = 94; // Mock - would calculate from actual data
-  
+
   const stats = [
     {
-      label: 'Total Documents',
+      title: 'Total Documents',
       value: totalLeases,
-      icon: FileText,
-      color: 'bg-blue-500',
-      lightColor: 'bg-blue-50',
-      textColor: 'text-blue-600',
+      icon: <FileText className="w-6 h-6" />,
     },
     {
-      label: 'Processed',
+      title: 'Processed',
       value: processedLeases,
-      icon: TrendingUp,
-      color: 'bg-green-500',
-      lightColor: 'bg-green-50',
-      textColor: 'text-green-600',
+      icon: <TrendingUp className="w-6 h-6" />,
+      change: {
+        value: '+12% this month',
+        trend: 'up' as const,
+      },
     },
     {
-      label: 'Time Saved',
+      title: 'Time Saved',
       value: formatTime(timeSaved),
-      icon: Clock,
-      color: 'bg-amber-500',
-      lightColor: 'bg-amber-50',
-      textColor: 'text-amber-600',
+      icon: <Clock className="w-6 h-6" />,
     },
     {
-      label: 'Avg. Accuracy',
+      title: 'Avg. Accuracy',
       value: `${accuracy}%`,
-      icon: Zap,
-      color: 'bg-purple-500',
-      lightColor: 'bg-purple-50',
-      textColor: 'text-purple-600',
+      icon: <Zap className="w-6 h-6" />,
+      change: {
+        value: '+2.1% this month',
+        trend: 'up' as const,
+      },
     },
   ];
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {stats.map((stat) => (
-        <div
-          key={stat.label}
-          className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600">{stat.label}</p>
-              <p className="mt-2 text-3xl font-bold text-slate-900">{stat.value}</p>
-            </div>
-            <div className={`${stat.lightColor} p-3 rounded-lg`}>
-              <stat.icon className={`w-6 h-6 ${stat.textColor}`} />
-            </div>
-          </div>
-        </div>
+        <StatsCard
+          key={stat.title}
+          title={stat.title}
+          value={stat.value}
+          icon={stat.icon}
+          change={stat.change}
+        />
       ))}
     </div>
   );

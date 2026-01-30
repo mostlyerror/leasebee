@@ -1,6 +1,7 @@
 """Lease model for storing PDF metadata."""
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, Enum as SQLEnum, Float
+from sqlalchemy import Column, Integer, String, DateTime, Enum as SQLEnum, Float, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import enum
 
@@ -38,7 +39,20 @@ class Lease(Base):
 
     # Metadata
     page_count = Column(Integer, nullable=True)
-    uploaded_by = Column(String, nullable=True)  # For future auth
+
+    # Multi-tenant fields
+    organization_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("organizations.id", ondelete="CASCADE"),
+        nullable=True,  # Nullable for migration compatibility
+        index=True
+    )
+    uploaded_by = Column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True
+    )
 
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -47,6 +61,8 @@ class Lease(Base):
 
     # Relationships
     extractions = relationship("Extraction", back_populates="lease", cascade="all, delete-orphan")
+    organization = relationship("Organization", back_populates="leases")
+    uploader = relationship("User", foreign_keys=[uploaded_by])
 
     def __repr__(self):
         return f"<Lease(id={self.id}, filename={self.filename}, status={self.status})>"

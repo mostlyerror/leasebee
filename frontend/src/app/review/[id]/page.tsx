@@ -8,6 +8,7 @@ import { PDFViewer } from '@/components/pdf/PDFViewer';
 import { FieldReviewPanel } from '@/components/review/FieldReviewPanel';
 import { Loader2, ArrowLeft, FileText } from 'lucide-react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 interface Citation {
   page: number;
@@ -207,13 +208,13 @@ export default function ReviewPage() {
             <span>{fieldValues.length}</span>
             <span className="text-slate-400">reviewed</span>
           </div>
-          <button
+          <Button
             onClick={() => submitFeedbackMutation.mutate()}
             disabled={Object.keys(feedback).length < fieldValues.length || submitFeedbackMutation.isPending}
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-slate-300 text-white text-sm font-medium rounded-lg transition-colors"
+            variant="primary"
           >
             {submitFeedbackMutation.isPending ? 'Submitting...' : 'Submit Review'}
-          </button>
+          </Button>
         </div>
       </header>
 

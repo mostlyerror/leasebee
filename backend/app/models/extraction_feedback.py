@@ -1,6 +1,7 @@
 """Extraction feedback model for overall quality ratings."""
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Float
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -31,10 +32,18 @@ class ExtractionFeedback(Base):
 
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    reviewed_by = Column(String, nullable=True)
+
+    # Multi-tenant field
+    reviewed_by = Column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True
+    )
 
     # Relationships
     extraction = relationship("Extraction", back_populates="feedback")
+    reviewer = relationship("User", foreign_keys=[reviewed_by])
 
     def __repr__(self):
         return f"<ExtractionFeedback(id={self.id}, extraction_id={self.extraction_id}, rating={self.quality_rating})>"
