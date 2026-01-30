@@ -56,8 +56,17 @@ export function PDFViewer({ url, highlights = [], activeField, onPageClick }: PD
     (window as any).pdfScrollToPage = scrollToPage;
   }
 
-  const goToPrevPage = () => setPageNumber((prev) => Math.max(prev - 1, 1));
-  const goToNextPage = () => setPageNumber((prev) => Math.min(prev + 1, numPages));
+  const goToPrevPage = () => {
+    const newPage = Math.max(pageNumber - 1, 1);
+    setPageNumber(newPage);
+    scrollToPage(newPage);
+  };
+  
+  const goToNextPage = () => {
+    const newPage = Math.min(pageNumber + 1, numPages);
+    setPageNumber(newPage);
+    scrollToPage(newPage);
+  };
   const zoomIn = () => setScale((prev) => Math.min(prev + 0.2, 3));
   const zoomOut = () => setScale((prev) => Math.max(prev - 0.2, 0.5));
 
