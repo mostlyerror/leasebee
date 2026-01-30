@@ -18,9 +18,10 @@ from app.schemas.pydantic_schemas import (
     FieldSchemaResponse,
     FieldDefinition,
 )
-from app.schemas.field_schema import LEASE_FIELDS, FieldCategory
+from app.schemas.field_schema import LEASE_FIELDS, FieldCategory, get_field_by_path
 from app.services.storage_service import storage_service
 from app.services.claude_service import claude_service
+from app.services.validation_service import validation_service
 
 router = APIRouter()
 
@@ -29,6 +30,7 @@ router = APIRouter()
 async def extract_lease_data(
     lease_id: int,
     background_tasks: BackgroundTasks,
+    use_multi_pass: bool = True,
     db: Session = Depends(get_db)
 ):
     """
@@ -37,6 +39,7 @@ async def extract_lease_data(
     Args:
         lease_id: Lease ID to extract
         background_tasks: FastAPI background tasks
+        use_multi_pass: Enable multi-pass refinement for low-confidence fields (default: True)
         db: Database session
 
     Returns:
@@ -68,22 +71,68 @@ async def extract_lease_data(
         # Download PDF from storage
         pdf_bytes = storage_service.download_pdf(lease.file_path)
 
-        # Extract data using Claude
-        result = claude_service.extract_lease_data(pdf_bytes)
+        # Extract data using Claude (with multi-pass if enabled)
+        if use_multi_pass:
+            result = claude_service.extract_lease_data_with_refinement(pdf_bytes)
+        else:
+            result = claude_service.extract_lease_data(pdf_bytes)
+
+        # Validate and normalize extracted values
+        extractions_dict = result['extractions']
+        reasoning_dict = result.get('reasoning', {})
+        citations_dict = result.get('citations', {})
+        confidence_dict = result.get('confidence', {})
+        validation_warnings = {}
+
+        for field_path, value in list(extractions_dict.items()):
+            if value is not None:
+                # Get field definition from schema
+                field_def = get_field_by_path(field_path)
+
+                if field_def:
+                    # Validate and normalize
+                    validation_result = validation_service.validate_and_normalize(
+                        field_path,
+                        value,
+                        field_def['type'].value,
+                        all_extractions=extractions_dict
+                    )
+
+                    # Update with normalized value
+                    extractions_dict[field_path] = validation_result.value
+
+                    # Adjust confidence if validation suggests issues
+                    if validation_result.confidence_adjustment != 0:
+                        current_confidence = confidence_dict.get(field_path, 0.5)
+                        adjusted_confidence = max(
+                            0.0,
+                            min(1.0, current_confidence + validation_result.confidence_adjustment)
+                        )
+                        confidence_dict[field_path] = adjusted_confidence
+
+                    # Store warnings
+                    if validation_result.warnings:
+                        validation_warnings[field_path] = validation_result.warnings
+
+        # Add validation warnings to metadata
+        if 'metadata' not in result:
+            result['metadata'] = {}
+        result['metadata']['validation_warnings'] = validation_warnings
 
         # Create extraction record
         extraction = Extraction(
             lease_id=lease_id,
-            extractions=result['extractions'],
-            reasoning=result.get('reasoning'),
-            citations=result.get('citations'),
-            confidence=result.get('confidence'),
+            extractions=extractions_dict,
+            reasoning=reasoning_dict,
+            citations=citations_dict,
+            confidence=confidence_dict,
             model_version=result['metadata']['model_version'],
             prompt_version=result['metadata']['prompt_version'],
             input_tokens=result['metadata']['input_tokens'],
             output_tokens=result['metadata']['output_tokens'],
             total_cost=result['metadata']['total_cost'],
             processing_time_seconds=result['metadata']['processing_time_seconds'],
+            extraction_metadata=result['metadata']
         )
 
         db.add(extraction)

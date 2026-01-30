@@ -1,0 +1,333 @@
+{
+  "test_date": "2026-01-30T01:17:56.387559",
+  "test_type": "baseline",
+  "results": [
+    {
+      "lease_id": "sample_lease_001",
+      "filename": "sample_lease.pdf",
+      "description": "Sample office lease - Tech Center Plaza",
+      "metrics": {
+        "overall_accuracy": 73.53,
+        "precision": 92.59,
+        "recall": 73.53,
+        "total_fields": 34,
+        "correct": 25,
+        "incorrect": 2,
+        "missing": 7,
+        "field_results": {
+          "basic_info.lease_type": {
+            "status": "correct",
+            "expected": "Office",
+            "actual": "Office",
+            "confidence": 0.98,
+            "reason": "Exact match"
+          },
+          "basic_info.execution_date": {
+            "status": "missing",
+            "expected": "2023-12-15",
+            "actual": null,
+            "confidence": 0.0,
+            "reason": "Missing (expected: 2023-12-15)"
+          },
+          "parties.landlord_name": {
+            "status": "correct",
+            "expected": "Property Management LLC",
+            "actual": "Property Management LLC",
+            "confidence": 0.99,
+            "reason": "Exact match"
+          },
+          "parties.landlord_address": {
+            "status": "correct",
+            "expected": "456 Commercial Plaza, San Francisco, CA 94102",
+            "actual": "456 Commercial Plaza, San Francisco, CA 94102",
+            "confidence": 0.98,
+            "reason": "Exact match"
+          },
+          "parties.tenant_name": {
+            "status": "correct",
+            "expected": "Acme Corporation",
+            "actual": "Acme Corporation",
+            "confidence": 0.99,
+            "reason": "Exact match"
+          },
+          "parties.tenant_address": {
+            "status": "correct",
+            "expected": "123 Business Park, Suite 100, San Francisco, CA 94105",
+            "actual": "123 Business Park, Suite 100, San Francisco, CA 94105",
+            "confidence": 0.98,
+            "reason": "Exact match"
+          },
+          "property.address": {
+            "status": "correct",
+            "expected": "789 Office Boulevard, San Francisco, CA 94103",
+            "actual": "789 Office Boulevard, San Francisco, CA 94103",
+            "confidence": 0.99,
+            "reason": "Exact match"
+          },
+          "property.suite_unit": {
+            "status": "correct",
+            "expected": "Suite 200",
+            "actual": "Suite 200",
+            "confidence": 0.99,
+            "reason": "Exact match"
+          },
+          "property.rentable_area": {
+            "status": "correct",
+            "expected": "5000",
+            "actual": "5000",
+            "confidence": 0.98,
+            "reason": "Exact match"
+          },
+          "property.usable_area": {
+            "status": "correct",
+            "expected": null,
+            "actual": null,
+            "confidence": 0.0,
+            "reason": "Exact match"
+          },
+          "dates.commencement_date": {
+            "status": "correct",
+            "expected": "2024-01-01",
+            "actual": "2024-01-01",
+            "confidence": 0.99,
+            "reason": "Exact match"
+          },
+          "dates.expiration_date": {
+            "status": "correct",
+            "expected": "2026-12-31",
+            "actual": "2026-12-31",
+            "confidence": 0.99,
+            "reason": "Exact match"
+          },
+          "dates.rent_commencement_date": {
+            "status": "correct",
+            "expected": null,
+            "actual": null,
+            "confidence": 0.0,
+            "reason": "Exact match"
+          },
+          "dates.lease_term_months": {
+            "status": "correct",
+            "expected": "36",
+            "actual": "36",
+            "confidence": 0.99,
+            "reason": "Exact match"
+          },
+          "rent.base_rent_monthly": {
+            "status": "correct",
+            "expected": "15000.00",
+            "actual": "15000.00",
+            "confidence": 0.99,
+            "reason": "Exact match"
+          },
+          "rent.base_rent_annual": {
+            "status": "correct",
+            "expected": "180000.00",
+            "actual": "180000.00",
+            "confidence": 0.95,
+            "reason": "Exact match"
+          },
+          "rent.rent_per_sf_annual": {
+            "status": "correct",
+            "expected": "36.00",
+            "actual": "36.00",
+            "confidence": 0.95,
+            "reason": "Exact match"
+          },
+          "rent.rent_escalations": {
+            "status": "incorrect",
+            "expected": "3% annually on each anniversary of the Commencement Date",
+            "actual": "3% annual increase on each anniversary of the Commencement Date",
+            "confidence": 0.97,
+            "reason": "Mismatch (expected: 3% annually on each anniversary of the Commencement Date, got: 3% annual increase on each anniversary of the Commencement Date)"
+          },
+          "rent.free_rent_months": {
+            "status": "correct",
+            "expected": null,
+            "actual": null,
+            "confidence": 0.0,
+            "reason": "Exact match"
+          },
+          "operating_expenses.structure_type": {
+            "status": "correct",
+            "expected": "NNN",
+            "actual": "Triple Net (NNN)",
+            "confidence": 0.98,
+            "reason": "Partial text match"
+          },
+          "operating_expenses.base_year": {
+            "status": "correct",
+            "expected": null,
+            "actual": null,
+            "confidence": 0.0,
+            "reason": "Exact match"
+          },
+          "operating_expenses.tenant_share_percentage": {
+            "status": "correct",
+            "expected": null,
+            "actual": null,
+            "confidence": 0.0,
+            "reason": "Exact match"
+          },
+          "financial.security_deposit": {
+            "status": "correct",
+            "expected": "30000.00",
+            "actual": "30000.00",
+            "confidence": 0.99,
+            "reason": "Exact match"
+          },
+          "financial.tenant_improvement_allowance": {
+            "status": "missing",
+            "expected": "50000.00",
+            "actual": null,
+            "confidence": 0.0,
+            "reason": "Missing (expected: 50000.00)"
+          },
+          "rights.renewal_options": {
+            "status": "incorrect",
+            "expected": "Two 12-month options with 180 days advance notice",
+            "actual": "Two 12-month options with 180 days advance written notice, provided Tenant is not in default",
+            "confidence": 0.97,
+            "reason": "Mismatch (expected: Two 12-month options with 180 days advance notice, got: Two 12-month options with 180 days advance written notice, provided Tenant is not in default)"
+          },
+          "rights.termination_rights": {
+            "status": "correct",
+            "expected": null,
+            "actual": null,
+            "confidence": 0.0,
+            "reason": "Exact match"
+          },
+          "rights.expansion_rights": {
+            "status": "correct",
+            "expected": null,
+            "actual": null,
+            "confidence": 0.0,
+            "reason": "Exact match"
+          },
+          "use.permitted_use": {
+            "status": "missing",
+            "expected": "Office Space",
+            "actual": null,
+            "confidence": 0.0,
+            "reason": "Missing (expected: Office Space)"
+          },
+          "use.exclusive_use": {
+            "status": "correct",
+            "expected": null,
+            "actual": null,
+            "confidence": 0.0,
+            "reason": "Exact match"
+          },
+          "maintenance.landlord_responsibilities": {
+            "status": "missing",
+            "expected": "Exterior of building, common areas, structural elements, roof, and building systems",
+            "actual": null,
+            "confidence": 0.0,
+            "reason": "Missing (expected: Exterior of building, common areas, structural elements, roof, and building systems)"
+          },
+          "maintenance.tenant_responsibilities": {
+            "status": "missing",
+            "expected": "Interior of the Premises including all fixtures, equipment, and improvements installed by Tenant",
+            "actual": null,
+            "confidence": 0.0,
+            "reason": "Missing (expected: Interior of the Premises including all fixtures, equipment, and improvements installed by Tenant)"
+          },
+          "insurance.tenant_insurance_requirements": {
+            "status": "correct",
+            "expected": null,
+            "actual": null,
+            "confidence": 0.0,
+            "reason": "Exact match"
+          },
+          "other.parking_spaces": {
+            "status": "missing",
+            "expected": "10",
+            "actual": null,
+            "confidence": 0.0,
+            "reason": "Missing (expected: 10)"
+          },
+          "other.parking_cost": {
+            "status": "missing",
+            "expected": "0",
+            "actual": null,
+            "confidence": 0.0,
+            "reason": "Missing (expected: 0)"
+          }
+        },
+        "per_field_accuracy": {
+          "basic_info": 50.0,
+          "parties": 100.0,
+          "property": 100.0,
+          "dates": 100.0,
+          "rent": 80.0,
+          "operating_expenses": 100.0,
+          "financial": 50.0,
+          "rights": 66.67,
+          "use": 50.0,
+          "maintenance": 0.0,
+          "insurance": 100.0,
+          "other": 0.0
+        },
+        "problematic_fields": [
+          {
+            "field": "basic_info.execution_date",
+            "issue": "missing",
+            "expected": "2023-12-15"
+          },
+          {
+            "field": "rent.rent_escalations",
+            "issue": "incorrect",
+            "expected": "3% annually on each anniversary of the Commencement Date",
+            "actual": "3% annual increase on each anniversary of the Commencement Date",
+            "confidence": 0.97
+          },
+          {
+            "field": "financial.tenant_improvement_allowance",
+            "issue": "missing",
+            "expected": "50000.00"
+          },
+          {
+            "field": "rights.renewal_options",
+            "issue": "incorrect",
+            "expected": "Two 12-month options with 180 days advance notice",
+            "actual": "Two 12-month options with 180 days advance written notice, provided Tenant is not in default",
+            "confidence": 0.97
+          },
+          {
+            "field": "use.permitted_use",
+            "issue": "missing",
+            "expected": "Office Space"
+          },
+          {
+            "field": "maintenance.landlord_responsibilities",
+            "issue": "missing",
+            "expected": "Exterior of building, common areas, structural elements, roof, and building systems"
+          },
+          {
+            "field": "maintenance.tenant_responsibilities",
+            "issue": "missing",
+            "expected": "Interior of the Premises including all fixtures, equipment, and improvements installed by Tenant"
+          },
+          {
+            "field": "other.parking_spaces",
+            "issue": "missing",
+            "expected": "10"
+          },
+          {
+            "field": "other.parking_cost",
+            "issue": "missing",
+            "expected": "0"
+          }
+        ]
+      },
+      "metadata": {
+        "model_version": "claude-sonnet-4-5-20250929",
+        "prompt_version": "1.0",
+        "input_tokens": 8350,
+        "output_tokens": 3272,
+        "total_cost": 0.0741,
+        "processing_time_seconds": 36.625844955444336
+      }
+    }
+  ]
+}

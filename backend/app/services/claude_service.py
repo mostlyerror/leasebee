@@ -2,11 +2,11 @@
 import time
 import json
 import base64
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from anthropic import Anthropic
 
 from app.core.config import settings
-from app.schemas.field_schema import get_schema_for_claude, get_field_paths
+from app.schemas.field_schema import get_schema_for_claude, get_field_paths, get_field_by_path
 
 
 class ClaudeService:
@@ -95,6 +95,245 @@ class ClaudeService:
         except Exception as e:
             raise Exception(f"Claude API error: {str(e)}")
 
+    def extract_lease_data_with_refinement(
+        self,
+        pdf_bytes: bytes,
+        confidence_threshold: float = 0.70,
+        few_shot_examples: Optional[list] = None
+    ) -> Dict[str, Any]:
+        """
+        Extract with multi-pass refinement for low-confidence fields.
+
+        Strategy:
+        1. Initial extraction of all fields
+        2. Identify low-confidence fields (< threshold)
+        3. Re-extract those fields with focused prompt
+        4. Merge results, preferring higher confidence
+
+        Args:
+            pdf_bytes: PDF file content as bytes
+            confidence_threshold: Threshold below which to re-extract (default 0.70)
+            few_shot_examples: Optional examples for few-shot learning
+
+        Returns:
+            Dictionary with merged extraction results and metadata
+        """
+        # Pass 1: Extract all fields
+        initial_result = self.extract_lease_data(pdf_bytes, few_shot_examples)
+
+        # Identify low-confidence fields
+        low_confidence_fields = [
+            field_path
+            for field_path, confidence in initial_result['confidence'].items()
+            if confidence < confidence_threshold and initial_result['extractions'].get(field_path) is not None
+        ]
+
+        # If no low-confidence fields, return initial result
+        if not low_confidence_fields:
+            initial_result['metadata']['multi_pass'] = False
+            initial_result['metadata']['refined_fields'] = []
+            return initial_result
+
+        # Pass 2: Re-extract low-confidence fields with focused prompt
+        focused_result = self._extract_focused_fields(
+            pdf_bytes,
+            low_confidence_fields,
+            initial_context=initial_result['extractions']
+        )
+
+        # Merge results - prefer focused extraction if confidence improved
+        merged_result = self._merge_extraction_results(
+            initial_result,
+            focused_result,
+            low_confidence_fields
+        )
+
+        merged_result['metadata']['multi_pass'] = True
+        merged_result['metadata']['refined_fields'] = low_confidence_fields
+
+        return merged_result
+
+    def _extract_focused_fields(
+        self,
+        pdf_bytes: bytes,
+        field_paths: List[str],
+        initial_context: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Extract specific fields with a focused prompt.
+
+        This targeted extraction provides:
+        - Field-specific guidance
+        - Context from other extracted values
+        - More detailed instructions
+
+        Args:
+            pdf_bytes: PDF file content as bytes
+            field_paths: List of field paths to re-extract
+            initial_context: Previously extracted values for context
+
+        Returns:
+            Extraction result for focused fields
+        """
+        # Build field-specific descriptions
+        fields_description = []
+        for path in field_paths:
+            field_def = get_field_by_path(path)
+            if field_def:
+                fields_description.append(
+                    f"- {path}: {field_def['description']} (Type: {field_def['type'].value})"
+                )
+
+        fields_text = "\n".join(fields_description)
+
+        # Build context information (fields already extracted with confidence)
+        context_info = []
+        for k, v in initial_context.items():
+            if k not in field_paths and v is not None:
+                context_info.append(f"- {k}: {v}")
+
+        context_text = "\n".join(context_info) if context_info else "None available"
+
+        # Build focused prompt
+        focused_prompt = f"""You are a commercial lease abstraction expert performing a FOCUSED RE-EXTRACTION.
+
+CONTEXT FROM INITIAL EXTRACTION:
+The following fields have already been extracted with acceptable confidence:
+{context_text}
+
+FIELDS TO RE-EXTRACT:
+These fields had low confidence in the initial extraction and need careful re-examination:
+{fields_text}
+
+INSTRUCTIONS:
+1. CAREFULLY re-read the document focusing ONLY on these specific fields
+2. Use the context from other extracted fields to help locate information
+3. Look in multiple locations: table of contents, specific sections, exhibits, schedules
+4. Cross-reference information across different parts of the document
+5. If truly not present after thorough search, confidently set to null with clear reasoning
+6. Provide very specific citations with exact page number and direct quote
+
+Return ONLY valid JSON with this structure:
+{{
+  "extractions": {{"field_path": "value"}},
+  "reasoning": {{"field_path": "detailed reasoning explaining where and how you found this"}},
+  "citations": {{"field_path": {{"page": N, "quote": "exact text from document"}}}},
+  "confidence": {{"field_path": 0.0-1.0}}
+}}
+
+{self._get_field_type_guidance()}
+
+Now perform the focused re-extraction. Return ONLY the JSON object, no other text."""
+
+        try:
+            # Encode PDF to base64
+            pdf_base64 = base64.standard_b64encode(pdf_bytes).decode('utf-8')
+
+            # Call Claude API with focused prompt
+            response = self.client.messages.create(
+                model=self.model,
+                max_tokens=4000,  # Smaller response for focused extraction
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "document",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": "application/pdf",
+                                    "data": pdf_base64,
+                                },
+                            },
+                            {
+                                "type": "text",
+                                "text": focused_prompt,
+                            }
+                        ],
+                    }
+                ],
+            )
+
+            # Parse response
+            result = self._parse_response(response)
+
+            # Add metadata about this focused extraction
+            result['metadata'] = {
+                'model_version': self.model,
+                'prompt_version': f"{self.prompt_version}_focused",
+                'input_tokens': response.usage.input_tokens,
+                'output_tokens': response.usage.output_tokens,
+                'total_cost': self._calculate_cost(
+                    response.usage.input_tokens,
+                    response.usage.output_tokens
+                ),
+                'fields_refined': field_paths
+            }
+
+            return result
+
+        except Exception as e:
+            raise Exception(f"Focused extraction error: {str(e)}")
+
+    def _merge_extraction_results(
+        self,
+        initial: Dict[str, Any],
+        focused: Dict[str, Any],
+        refined_fields: List[str]
+    ) -> Dict[str, Any]:
+        """
+        Merge initial and focused extraction results.
+
+        Strategy:
+        - Use focused result if confidence improved by >= 0.10
+        - Otherwise keep initial result
+        - Track which fields were updated
+
+        Args:
+            initial: Initial extraction result
+            focused: Focused extraction result
+            refined_fields: List of fields that were re-extracted
+
+        Returns:
+            Merged extraction result
+        """
+        merged = initial.copy()
+        updated_fields = []
+        improvements = {}
+
+        for field_path in refined_fields:
+            initial_conf = initial['confidence'].get(field_path, 0.0)
+            focused_conf = focused['confidence'].get(field_path, 0.0)
+
+            # Use focused extraction if confidence improved significantly
+            confidence_gain = focused_conf - initial_conf
+
+            if confidence_gain >= 0.10:
+                # Update with focused extraction
+                merged['extractions'][field_path] = focused['extractions'].get(field_path)
+                merged['reasoning'][field_path] = focused['reasoning'].get(field_path)
+                merged['citations'][field_path] = focused['citations'].get(field_path)
+                merged['confidence'][field_path] = focused_conf
+
+                updated_fields.append(field_path)
+                improvements[field_path] = {
+                    'initial_confidence': initial_conf,
+                    'focused_confidence': focused_conf,
+                    'improvement': confidence_gain
+                }
+
+        # Update metadata with merge information
+        merged['metadata']['updated_from_refinement'] = updated_fields
+        merged['metadata']['refinement_improvements'] = improvements
+
+        # Add costs from both passes
+        if 'total_cost' in focused['metadata']:
+            merged['metadata']['total_cost'] += focused['metadata']['total_cost']
+            merged['metadata']['initial_cost'] = initial['metadata']['total_cost']
+            merged['metadata']['refinement_cost'] = focused['metadata']['total_cost']
+
+        return merged
+
     def _build_extraction_prompt(self, few_shot_examples: Optional[list] = None) -> str:
         """
         Build the extraction prompt for Claude.
@@ -131,6 +370,12 @@ Return a JSON object with this EXACT structure:
 
 FIELD SCHEMA:
 {schema}
+
+{self._get_field_type_guidance()}
+
+{self._get_extraction_examples()}
+
+{self._get_null_value_guidance()}
 
 """
 
@@ -186,6 +431,172 @@ FIELD SCHEMA:
             raise Exception(f"Failed to parse Claude response as JSON: {str(e)}\nResponse: {content}")
         except Exception as e:
             raise Exception(f"Failed to parse Claude response: {str(e)}")
+
+    def _get_field_type_guidance(self) -> str:
+        """Get comprehensive field-type specific extraction guidance."""
+        return """
+=== CRITICAL EXTRACTION GUIDELINES ===
+
+DATES:
+- Format: Always return ISO format YYYY-MM-DD
+- Common locations: Look in "Term", "Lease Period", or first page summary
+- Handle variations: "January 1, 2024" → "2024-01-01", "1/1/24" → "2024-01-01"
+- TBD dates: If date is "TBD", "upon completion", or "to be determined", set to null
+- Expiration calculation: If only term length given, calculate from commencement date
+- Confidence: High (0.95+) only if exact date stated, Medium (0.7-0.9) if calculated
+
+CURRENCY (Rent, Deposits, Allowances):
+- Format: Numeric value only, no symbols. Use "." for decimals (e.g., "15000.00")
+- Per-month to annual: If "per month", multiply by 12 for annual fields
+- Look for: Dollar signs, "rent", "deposit", financial tables
+- Free rent: If "first month free" or rent abatement, note in reasoning
+- Escalations: Extract base rent separate from escalated amounts
+- Confidence: High (0.95+) if in table/schedule, Medium (0.7-0.9) if in paragraph
+
+SQUARE FOOTAGE / AREA:
+- Format: Numeric value only, no "SF" or "square feet" (e.g., "5000")
+- RSF vs USF: Rentable vs Usable - extract to correct field
+- Common locations: Property description, first page, exhibits, rent calculations
+- Look for: "rentable square feet", "RSF", "usable square feet", "USF"
+- Variations: "5,000 SF" → "5000", "Five thousand square feet" → "5000"
+- Confidence: High (0.95+) if explicitly stated, Medium (0.7-0.9) if calculated from rent/SF
+
+ADDRESSES:
+- Format: Full street address with city, state, ZIP
+- Suite/unit: Extract separately to suite_unit field, not in main address
+- Look for: First page, "Premises", "Property Description"
+- Example: "123 Main St, Suite 200, San Francisco, CA 94105"
+  → property.address: "123 Main St, San Francisco, CA 94105"
+  → property.suite_unit: "Suite 200"
+- Confidence: High (0.95+) for complete address
+
+PARTIES (Landlord, Tenant):
+- Names: Extract full legal name as written (include "LLC", "Inc", etc)
+- Look for: First page, "between", signature blocks, "Landlord" and "Tenant" labels
+- Avoid: Don't extract contact persons, only entity names
+- Example: "ABC Properties, LLC" not "John Smith of ABC Properties"
+- Addresses: Extract party addresses separately
+- Confidence: High (0.95+) for names on first page
+
+PERCENTAGES:
+- Format: Decimal (0.05 for 5%, not "5" or "5%")
+- Look for: Rent increases, tenant's share, parking ratio
+- Context: "5% annual increase" → "0.05", "Tenant's 12.5% share" → "0.125"
+- Confidence: High (0.95+) if explicit percentage
+
+BOOLEAN FIELDS:
+- Format: true or false (lowercase)
+- Look for: "NNN", "gross lease", "shall"/"shall not"
+- If ambiguous or unclear, set to null
+- Confidence: Only high (0.9+) if explicitly stated
+
+COMPLEX TERMS (Renewal Options, Termination Rights):
+- Extract: Number of options, duration, advance notice required, conditions
+- Structure: Free text with all details (e.g., "Two 5-year options with 12 months advance notice")
+- Look for: "Option to Renew", "Extension", "Termination", "Early Exit"
+- Include: All conditions, rent adjustment methods, deadlines
+- Confidence: High (0.9+) only if complete terms extracted
+
+NULL VALUES:
+- Use null when: Field not present, unclear, contradictory, or "TBD"
+- Always explain: "Not specified in document" or "Contradictory information on pages X and Y"
+- Never guess or infer unless explicitly calculable
+
+CITATIONS:
+- Page number: Actual page number where found (not PDF page index)
+- Quote: Extract 50-200 character quote showing exact source
+- Context: Provide enough context to verify extraction
+- Multiple pages: If info spans pages, cite primary page
+
+CONFIDENCE SCORING:
+- 0.95-1.0: Explicit, unambiguous, in table/schedule
+- 0.85-0.94: Clear but requires minor interpretation
+- 0.70-0.84: Found but requires calculation or inference
+- 0.50-0.69: Ambiguous or unclear wording
+- Below 0.50: Very uncertain, consider null instead
+"""
+
+    def _get_extraction_examples(self) -> str:
+        """Get concrete extraction examples for each field type."""
+        return """
+=== EXTRACTION EXAMPLES ===
+
+Example 1 - Base Rent Extraction:
+Source: "Tenant shall pay annual base rent of Fifteen Thousand Dollars ($15,000.00) per month"
+Field: rent.base_rent_monthly
+Correct Value: "15000.00"
+Reasoning: "Explicitly stated as $15,000.00 per month in rent payment section"
+Confidence: 0.98
+
+Example 2 - Square Footage:
+Source: "The Premises consist of approximately 3,500 rentable square feet"
+Field: property.rentable_area
+Correct Value: "3500"
+Reasoning: "Explicitly stated as 3,500 RSF in property description"
+Confidence: 0.95
+
+Example 3 - Commencement Date:
+Source: "Term shall commence on January 15, 2024 (the 'Commencement Date')"
+Field: dates.commencement_date
+Correct Value: "2024-01-15"
+Reasoning: "Explicit commencement date in term section"
+Confidence: 0.99
+
+Example 4 - Missing Field:
+Source: [No mention of parking in entire document]
+Field: other.parking_spaces
+Correct Value: null
+Reasoning: "Parking is not mentioned or addressed in the lease document"
+Confidence: 0.0
+
+Example 5 - Complex Renewal Option:
+Source: "Tenant shall have two (2) options to extend the Lease for five (5) years each, exercisable by providing Landlord with twelve (12) months advance written notice"
+Field: rights.renewal_options
+Correct Value: "Two 5-year options with 12 months advance notice"
+Reasoning: "Two renewal options explicitly stated, each for 5-year term with 12-month notice requirement"
+Confidence: 0.96
+
+Example 6 - Percentage Extraction:
+Source: "Tenant's proportionate share shall be 12.5% of operating expenses"
+Field: operating_expenses.tenant_share_percentage
+Correct Value: "0.125"
+Reasoning: "Tenant's share explicitly stated as 12.5%"
+Confidence: 0.98
+"""
+
+    def _get_null_value_guidance(self) -> str:
+        """Get guidance on when to use null values."""
+        return """
+=== WHEN TO USE NULL VALUES ===
+
+Use null (not empty string, not "N/A") when:
+
+1. Field not mentioned in document
+   - Example: No parking section exists
+   - Reasoning: "Parking allocation not addressed in lease"
+
+2. Explicitly TBD or to be determined
+   - Example: "Commencement date to be determined"
+   - Reasoning: "Commencement date listed as TBD"
+
+3. Contradictory information
+   - Example: Page 5 says "$10,000/mo", Page 12 says "$12,000/mo"
+   - Reasoning: "Contradictory rent amounts on pages 5 and 12, requires clarification"
+
+4. Ambiguous or unclear
+   - Example: "Rent subject to market adjustment"
+   - Reasoning: "Base rent not specified, only described as market-based"
+
+5. Document quality issue
+   - Example: Critical section is illegible or redacted
+   - Reasoning: "Financial terms section illegible in provided PDF"
+
+NEVER:
+- Guess values not in document
+- Use typical/standard values as defaults
+- Infer from other leases or general knowledge
+- Leave fields empty without explanation
+"""
 
     def _calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
         """

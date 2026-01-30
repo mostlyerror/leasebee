@@ -1,0 +1,55 @@
+{
+  "description": "Gold standard test set for extraction accuracy measurement",
+  "version": "1.0",
+  "created_at": "2026-01-28",
+  "leases": [
+    {
+      "lease_id": "sample_lease_001",
+      "filename": "sample_lease.pdf",
+      "description": "Sample office lease - Tech Center Plaza",
+      "gold_standard": {
+        "basic_info.lease_type": "Office",
+        "basic_info.execution_date": "2023-12-15",
+        "parties.landlord_name": "Property Management LLC",
+        "parties.landlord_address": "456 Commercial Plaza, San Francisco, CA 94102",
+        "parties.tenant_name": "Acme Corporation",
+        "parties.tenant_address": "123 Business Park, Suite 100, San Francisco, CA 94105",
+        "property.address": "789 Office Boulevard, San Francisco, CA 94103",
+        "property.suite_unit": "Suite 200",
+        "property.rentable_area": "5000",
+        "property.usable_area": null,
+        "dates.commencement_date": "2024-01-01",
+        "dates.expiration_date": "2026-12-31",
+        "dates.rent_commencement_date": null,
+        "dates.lease_term_months": "36",
+        "rent.base_rent_monthly": "15000.00",
+        "rent.base_rent_annual": "180000.00",
+        "rent.rent_per_sf_annual": "36.00",
+        "rent.rent_escalations": "3% annually on each anniversary of the Commencement Date",
+        "rent.free_rent_months": null,
+        "operating_expenses.structure_type": "NNN",
+        "operating_expenses.base_year": null,
+        "operating_expenses.tenant_share_percentage": null,
+        "financial.security_deposit": "30000.00",
+        "financial.tenant_improvement_allowance": "50000.00",
+        "rights.renewal_options": "Two 12-month options with 180 days advance notice",
+        "rights.termination_rights": null,
+        "rights.expansion_rights": null,
+        "use.permitted_use": "Office Space",
+        "use.exclusive_use": null,
+        "maintenance.landlord_responsibilities": "Exterior of building, common areas, structural elements, roof, and building systems",
+        "maintenance.tenant_responsibilities": "Interior of the Premises including all fixtures, equipment, and improvements installed by Tenant",
+        "insurance.tenant_insurance_requirements": null,
+        "other.parking_spaces": "10",
+        "other.parking_cost": "0"
+      }
+    }
+  ],
+  "notes": [
+    "This is a test with the sample_lease.pdf",
+    "All dates in ISO format (YYYY-MM-DD)",
+    "All currency values as numeric with 2 decimal places",
+    "All areas as numeric square feet",
+    "null values indicate field not present in document"
+  ]
+}
