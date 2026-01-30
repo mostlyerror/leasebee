@@ -208,3 +208,53 @@ async def get_download_url(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to generate download URL: {str(e)}"
         )
+
+
+@router.get("/{lease_id}/pdf")
+async def get_lease_pdf(
+    lease_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get the lease PDF file directly.
+    
+    This endpoint streams the PDF file content, allowing it to be displayed
+    in the browser's PDF viewer.
+    
+    Args:
+        lease_id: Lease ID
+        db: Database session
+        
+    Returns:
+        PDF file as a streaming response
+        
+    Raises:
+        HTTPException: If lease not found or file cannot be read
+    """
+    from fastapi.responses import StreamingResponse
+    from io import BytesIO
+    
+    lease = db.query(Lease).filter(Lease.id == lease_id).first()
+    if not lease:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lease not found"
+        )
+    
+    try:
+        # Download PDF bytes from storage
+        pdf_bytes = storage_service.download_pdf(lease.file_path)
+        
+        # Return as streaming response
+        return StreamingResponse(
+            BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'inline; filename="{lease.original_filename}"'
+            }
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve PDF: {str(e)}"
+        )

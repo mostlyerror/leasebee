@@ -71,8 +71,8 @@ export default function ReviewPage() {
   // Get PDF URL
   useEffect(() => {
     if (lease) {
-      // Use the download URL from the lease
-      setPdfUrl(`${process.env.NEXT_PUBLIC_API_URL}/api/leases/${leaseId}/download-url`);
+      // Use the direct PDF endpoint that streams the file
+      setPdfUrl(`${process.env.NEXT_PUBLIC_API_URL}/api/leases/${leaseId}/pdf`);
     }
   }, [lease, leaseId]);
 

@@ -103,6 +103,10 @@ export const leaseApi = {
       throw new Error('Failed to delete lease');
     }
   },
+
+  getPdfUrl(id: number): string {
+    return `${API_URL}/api/leases/${id}/pdf`;
+  },
 };
 
 // Extraction API
