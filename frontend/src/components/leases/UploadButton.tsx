@@ -29,8 +29,8 @@ export function UploadButton({ onUploadComplete }: UploadButtonProps) {
     onSuccess: ({ lease }) => {
       setUploadProgress('');
       onUploadComplete?.();
-      // Navigate to the lease detail page
-      router.push(`/leases/${lease.id}`);
+      // Navigate to the review page for human-in-the-loop verification
+      router.push(`/review/${lease.id}`);
     },
     onError: (error: any) => {
       setUploadProgress('');

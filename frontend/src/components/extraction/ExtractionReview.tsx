@@ -44,7 +44,6 @@ export function ExtractionReview({ extraction, lease }: ExtractionReviewProps) {
       extractionApi.export(extraction.id, {
         include_citations: false,
         include_reasoning: false,
-        format: 'json',
       }),
     onSuccess: (data) => {
       const filename = `${lease.original_filename.replace('.pdf', '')}_extracted.json`;

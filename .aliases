@@ -1,0 +1,54 @@
+# 🐝 LeaseBee - Shell Aliases
+# Source this file: source .aliases
+# Or add to your .zshrc/.bashrc: source /path/to/leasebee/.aliases
+
+# Navigation
+alias lb='cd /Users/benjaminpoon/dev/leasebee'
+alias lb-be='cd /Users/benjaminpoon/dev/leasebee/backend'
+alias lb-fe='cd /Users/benjaminpoon/dev/leasebee/frontend'
+
+# Backend (assumes venv is in backend/venv)
+alias lb-serve='cd /Users/benjaminpoon/dev/leasebee/backend && source venv/bin/activate && uvicorn app.main:app --reload'
+alias lb-py='cd /Users/benjaminpoon/dev/leasebee/backend && source venv/bin/activate && python'
+alias lb-test='cd /Users/benjaminpoon/dev/leasebee/backend && source venv/bin/activate && pytest'
+alias lb-db='cd /Users/benjaminpoon/dev/leasebee/backend && source venv/bin/activate && alembic'
+alias lb-migrate='cd /Users/benjaminpoon/dev/leasebee/backend && source venv/bin/activate && alembic upgrade head'
+
+# Frontend
+alias lb-dev='cd /Users/benjaminpoon/dev/leasebee/frontend && npm run dev'
+alias lb-npm='cd /Users/benjaminpoon/dev/leasebee/frontend && npm'
+alias lb-build='cd /Users/benjaminpoon/dev/leasebee/frontend && npm run build'
+alias lb-lint='cd /Users/benjaminpoon/dev/leasebee/frontend && npm run lint'
+
+# Both
+alias lb-install='cd /Users/benjaminpoon/dev/leasebee && make install'
+alias lb-clean='cd /Users/benjaminpoon/dev/leasebee && make clean'
+
+# Git shortcuts from root
+alias lb-git='cd /Users/benjaminpoon/dev/leasebee && git'
+alias lb-status='cd /Users/benjaminpoon/dev/leasebee && git status'
+alias lb-log='cd /Users/benjaminpoon/dev/leasebee && git log --oneline -10'
+
+echo "🐝 LeaseBee aliases loaded!"
+echo ""
+echo "Navigation:"
+echo "  lb        - Go to project root"
+echo "  lb-be     - Go to backend"
+echo "  lb-fe     - Go to frontend"
+echo ""
+echo "Development:"
+echo "  lb-serve  - Start backend server"
+echo "  lb-dev    - Start frontend dev server"
+echo "  lb-py     - Python shell with venv"
+echo ""
+echo "Testing:"
+echo "  lb-test   - Run backend tests"
+echo ""
+echo "Database:"
+echo "  lb-db     - Alembic commands (e.g., lb-db upgrade head)"
+echo "  lb-migrate- Run pending migrations"
+echo ""
+echo "Or use 'make' from project root:"
+echo "  make dev       - Start both servers"
+echo "  make install   - Install all deps"
+echo "  make test      - Run all tests"

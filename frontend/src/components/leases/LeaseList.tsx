@@ -27,8 +27,13 @@ export function LeaseList({ leases, onUpdate }: LeaseListProps) {
     },
   });
 
-  const handleView = (leaseId: number) => {
-    router.push(`/leases/${leaseId}`);
+  const handleView = (leaseId: number, status: string) => {
+    // Navigate to review page for completed extractions, otherwise to detail page
+    if (status === 'completed') {
+      router.push(`/review/${leaseId}`);
+    } else {
+      router.push(`/leases/${leaseId}`);
+    }
   };
 
   const handleDelete = (leaseId: number, filename: string) => {
@@ -69,12 +74,12 @@ export function LeaseList({ leases, onUpdate }: LeaseListProps) {
                   {lease.status}
                 </span>
                 <Button
-                  onClick={() => handleView(lease.id)}
+                  onClick={() => handleView(lease.id, lease.status)}
                   variant="outline"
                   size="sm"
                 >
                   <Eye className="h-4 w-4 mr-1" />
-                  View
+                  {lease.status === 'completed' ? 'Review' : 'View'}
                 </Button>
                 <Button
                   onClick={() => handleDelete(lease.id, lease.original_filename)}

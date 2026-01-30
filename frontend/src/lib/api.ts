@@ -140,4 +140,18 @@ export const extractionApi = {
   async getFieldSchema(): Promise<FieldSchema> {
     return fetchApi('/api/extractions/schema/fields');
   },
+
+  async submitCorrection(extractionId: number, correction: {
+    field_path: string;
+    original_value: any;
+    corrected_value: any;
+    correction_type: 'accept' | 'reject' | 'edit';
+    notes?: string;
+  }): Promise<any> {
+    return fetchApi(`/api/extractions/${extractionId}/corrections`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(correction),
+    });
+  },
 };

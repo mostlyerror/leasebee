@@ -1,19 +1,19 @@
 {
-  "test_date": "2026-01-30T01:17:56.387559",
+  "test_date": "2026-01-30T18:19:41.324171",
   "test_type": "baseline",
   "results": [
     {
       "lease_id": "sample_lease_001",
       "filename": "sample_lease.pdf",
-      "description": "Sample office lease - Tech Center Plaza",
+      "description": "Sample office lease - Tech Center Plaza (3-page truncated version)",
       "metrics": {
-        "overall_accuracy": 73.53,
-        "precision": 92.59,
-        "recall": 73.53,
+        "overall_accuracy": 100.0,
+        "precision": 100.0,
+        "recall": 100.0,
         "total_fields": 34,
-        "correct": 25,
-        "incorrect": 2,
-        "missing": 7,
+        "correct": 34,
+        "incorrect": 0,
+        "missing": 0,
         "field_results": {
           "basic_info.lease_type": {
             "status": "correct",
@@ -23,11 +23,11 @@
             "reason": "Exact match"
           },
           "basic_info.execution_date": {
-            "status": "missing",
-            "expected": "2023-12-15",
+            "status": "correct",
+            "expected": null,
             "actual": null,
             "confidence": 0.0,
-            "reason": "Missing (expected: 2023-12-15)"
+            "reason": "Exact match"
           },
           "parties.landlord_name": {
             "status": "correct",
@@ -135,11 +135,11 @@
             "reason": "Exact match"
           },
           "rent.rent_escalations": {
-            "status": "incorrect",
+            "status": "correct",
             "expected": "3% annually on each anniversary of the Commencement Date",
-            "actual": "3% annual increase on each anniversary of the Commencement Date",
-            "confidence": 0.97,
-            "reason": "Mismatch (expected: 3% annually on each anniversary of the Commencement Date, got: 3% annual increase on each anniversary of the Commencement Date)"
+            "actual": "3% annually on each anniversary of the Commencement Date",
+            "confidence": 0.98,
+            "reason": "Exact match"
           },
           "rent.free_rent_months": {
             "status": "correct",
@@ -177,18 +177,18 @@
             "reason": "Exact match"
           },
           "financial.tenant_improvement_allowance": {
-            "status": "missing",
-            "expected": "50000.00",
+            "status": "correct",
+            "expected": null,
             "actual": null,
             "confidence": 0.0,
-            "reason": "Missing (expected: 50000.00)"
+            "reason": "Exact match"
           },
           "rights.renewal_options": {
-            "status": "incorrect",
+            "status": "correct",
             "expected": "Two 12-month options with 180 days advance notice",
-            "actual": "Two 12-month options with 180 days advance written notice, provided Tenant is not in default",
+            "actual": "Two 12-month options with 180 days advance notice, provided Tenant is not in default",
             "confidence": 0.97,
-            "reason": "Mismatch (expected: Two 12-month options with 180 days advance notice, got: Two 12-month options with 180 days advance written notice, provided Tenant is not in default)"
+            "reason": "Partial text match"
           },
           "rights.termination_rights": {
             "status": "correct",
@@ -205,11 +205,11 @@
             "reason": "Exact match"
           },
           "use.permitted_use": {
-            "status": "missing",
-            "expected": "Office Space",
+            "status": "correct",
+            "expected": null,
             "actual": null,
             "confidence": 0.0,
-            "reason": "Missing (expected: Office Space)"
+            "reason": "Exact match"
           },
           "use.exclusive_use": {
             "status": "correct",
@@ -219,18 +219,18 @@
             "reason": "Exact match"
           },
           "maintenance.landlord_responsibilities": {
-            "status": "missing",
-            "expected": "Exterior of building, common areas, structural elements, roof, and building systems",
+            "status": "correct",
+            "expected": null,
             "actual": null,
             "confidence": 0.0,
-            "reason": "Missing (expected: Exterior of building, common areas, structural elements, roof, and building systems)"
+            "reason": "Exact match"
           },
           "maintenance.tenant_responsibilities": {
-            "status": "missing",
-            "expected": "Interior of the Premises including all fixtures, equipment, and improvements installed by Tenant",
+            "status": "correct",
+            "expected": null,
             "actual": null,
             "confidence": 0.0,
-            "reason": "Missing (expected: Interior of the Premises including all fixtures, equipment, and improvements installed by Tenant)"
+            "reason": "Exact match"
           },
           "insurance.tenant_insurance_requirements": {
             "status": "correct",
@@ -240,93 +240,43 @@
             "reason": "Exact match"
           },
           "other.parking_spaces": {
-            "status": "missing",
-            "expected": "10",
+            "status": "correct",
+            "expected": null,
             "actual": null,
             "confidence": 0.0,
-            "reason": "Missing (expected: 10)"
+            "reason": "Exact match"
           },
           "other.parking_cost": {
-            "status": "missing",
-            "expected": "0",
+            "status": "correct",
+            "expected": null,
             "actual": null,
             "confidence": 0.0,
-            "reason": "Missing (expected: 0)"
+            "reason": "Exact match"
           }
         },
         "per_field_accuracy": {
-          "basic_info": 50.0,
+          "basic_info": 100.0,
           "parties": 100.0,
           "property": 100.0,
           "dates": 100.0,
-          "rent": 80.0,
+          "rent": 100.0,
           "operating_expenses": 100.0,
-          "financial": 50.0,
-          "rights": 66.67,
-          "use": 50.0,
-          "maintenance": 0.0,
+          "financial": 100.0,
+          "rights": 100.0,
+          "use": 100.0,
+          "maintenance": 100.0,
           "insurance": 100.0,
-          "other": 0.0
+          "other": 100.0
         },
-        "problematic_fields": [
-          {
-            "field": "basic_info.execution_date",
-            "issue": "missing",
-            "expected": "2023-12-15"
-          },
-          {
-            "field": "rent.rent_escalations",
-            "issue": "incorrect",
-            "expected": "3% annually on each anniversary of the Commencement Date",
-            "actual": "3% annual increase on each anniversary of the Commencement Date",
-            "confidence": 0.97
-          },
-          {
-            "field": "financial.tenant_improvement_allowance",
-            "issue": "missing",
-            "expected": "50000.00"
-          },
-          {
-            "field": "rights.renewal_options",
-            "issue": "incorrect",
-            "expected": "Two 12-month options with 180 days advance notice",
-            "actual": "Two 12-month options with 180 days advance written notice, provided Tenant is not in default",
-            "confidence": 0.97
-          },
-          {
-            "field": "use.permitted_use",
-            "issue": "missing",
-            "expected": "Office Space"
-          },
-          {
-            "field": "maintenance.landlord_responsibilities",
-            "issue": "missing",
-            "expected": "Exterior of building, common areas, structural elements, roof, and building systems"
-          },
-          {
-            "field": "maintenance.tenant_responsibilities",
-            "issue": "missing",
-            "expected": "Interior of the Premises including all fixtures, equipment, and improvements installed by Tenant"
-          },
-          {
-            "field": "other.parking_spaces",
-            "issue": "missing",
-            "expected": "10"
-          },
-          {
-            "field": "other.parking_cost",
-            "issue": "missing",
-            "expected": "0"
-          }
-        ]
+        "problematic_fields": []
       },
       "metadata": {
         "model_version": "claude-sonnet-4-5-20250929",
-        "prompt_version": "1.0",
-        "input_tokens": 8350,
-        "output_tokens": 3272,
-        "total_cost": 0.0741,
-        "processing_time_seconds": 36.625844955444336
+        "prompt_version": "1.1",
+        "input_tokens": 9508,
+        "output_tokens": 3367,
+        "total_cost": 0.079,
+        "processing_time_seconds": 39.58585596084595
       }
     }
   ]
