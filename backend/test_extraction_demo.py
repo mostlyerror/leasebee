@@ -61,7 +61,6 @@ def main():
 
     # Display results
     extractions = result['extractions']
-    citations = result.get('citations', {})
     confidence = result.get('confidence', {})
     metadata = result.get('metadata', {})
 
