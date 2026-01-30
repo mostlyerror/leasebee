@@ -16,7 +16,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from app.services.claude_service import claude_service
-from app.services.validation_service import validation_service
 from app.schemas.field_schema import get_field_by_path
 
 
