@@ -96,14 +96,15 @@ export default function ReviewPage() {
     return fields;
   }, [extraction, schema]);
 
-  const highlights = useMemo(() => {
+  const heatmapFields = useMemo(() => {
     return fieldValues
       .filter((f) => f.citation?.bounding_box)
       .map((f) => ({
         fieldPath: f.path,
+        label: f.label,
         page: f.citation!.page,
+        confidence: f.confidence,
         boundingBox: f.citation!.bounding_box,
-        color: 'yellow',
       }));
   }, [fieldValues]);
 
@@ -111,7 +112,12 @@ export default function ReviewPage() {
     setActiveField(fieldPath);
     const field = fieldValues.find((f) => f.path === fieldPath);
     if (field?.citation?.page && typeof window !== 'undefined') {
-      (window as any).pdfScrollToPage?.(field.citation.page);
+      // Use scrollToField if bounding box exists, otherwise fall back to scrollToPage
+      if (field.citation.bounding_box) {
+        (window as any).pdfScrollToField?.(field.citation.page, field.citation.bounding_box);
+      } else {
+        (window as any).pdfScrollToPage?.(field.citation.page);
+      }
     }
   }, [fieldValues]);
 
@@ -217,8 +223,9 @@ export default function ReviewPage() {
         <div className="w-1/2 border-r border-slate-200 bg-slate-100">
           <PDFViewer
             url={pdfUrl}
-            highlights={highlights}
+            heatmapFields={heatmapFields}
             activeField={activeField}
+            onFieldClick={handleFieldClick}
           />
         </div>
 

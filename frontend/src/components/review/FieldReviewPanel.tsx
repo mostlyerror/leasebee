@@ -277,7 +277,7 @@ export function FieldReviewPanel({
                           </div>
                         )}
                       </div>
-                    </div>}
+                    </div>
                   </div>
                 );
               })}

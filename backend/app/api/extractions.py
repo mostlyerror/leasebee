@@ -22,6 +22,7 @@ from app.schemas.field_schema import LEASE_FIELDS, FieldCategory, get_field_by_p
 from app.services.storage_service import storage_service
 from app.services.claude_service import claude_service
 from app.services.validation_service import validation_service
+from app.services.pdf_service import pdf_service
 from app.services.progress_tracker import create_tracker, get_tracker, remove_tracker, ExtractionStage
 
 router = APIRouter()
@@ -90,13 +91,20 @@ async def extract_lease_data(
 
         # Stage: Parsing results
         tracker.advance_stage(ExtractionStage.PARSING)
-        
+
         # Validate and normalize extracted values
         extractions_dict = result['extractions']
         reasoning_dict = result.get('reasoning', {})
         citations_dict = result.get('citations', {})
         confidence_dict = result.get('confidence', {})
         validation_warnings = {}
+
+        # Enrich citations with bounding boxes
+        if citations_dict:
+            citations_dict = pdf_service.enrich_citations_with_bounding_boxes(
+                pdf_bytes,
+                citations_dict
+            )
 
         for field_path, value in list(extractions_dict.items()):
             if value is not None:

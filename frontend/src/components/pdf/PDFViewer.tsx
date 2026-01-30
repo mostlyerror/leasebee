@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
+import { ConfidenceHeatmap, HeatmapLegend } from './ConfidenceHeatmap';
 
 // Set PDF.js worker
 if (typeof window !== 'undefined') {
@@ -17,24 +18,27 @@ interface BoundingBox {
   y1: number;
 }
 
-interface Highlight {
+interface HeatmapField {
   fieldPath: string;
+  label: string;
   page: number;
+  confidence: number;
   boundingBox?: BoundingBox;
-  color: string;
 }
 
 interface PDFViewerProps {
   url: string;
-  highlights?: Highlight[];
+  heatmapFields?: HeatmapField[];
   activeField?: string | null;
+  onFieldClick?: (fieldPath: string) => void;
   onPageClick?: (page: number, x: number, y: number) => void;
 }
 
-export function PDFViewer({ url, highlights = [], activeField, onPageClick }: PDFViewerProps) {
+export function PDFViewer({ url, heatmapFields = [], activeField, onFieldClick, onPageClick }: PDFViewerProps) {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.2);
+  const [heatmapVisible, setHeatmapVisible] = useState<boolean>(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
@@ -46,14 +50,48 @@ export function PDFViewer({ url, highlights = [], activeField, onPageClick }: PD
   const scrollToPage = useCallback((page: number) => {
     const pageElement = pageRefs.current.get(page);
     if (pageElement && containerRef.current) {
-      pageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      pageElement.scrollIntoView({ behavior: 'auto', block: 'center' });
       setPageNumber(page);
     }
   }, []);
 
-  // Expose scrollToPage to parent
+  // Scroll to specific field with bounding box, centering it in viewport
+  const scrollToField = useCallback((page: number, boundingBox?: BoundingBox) => {
+    const pageElement = pageRefs.current.get(page);
+    const container = containerRef.current;
+
+    if (!pageElement || !container) return;
+
+    // If no bounding box, just scroll to page
+    if (!boundingBox) {
+      scrollToPage(page);
+      return;
+    }
+
+    // Calculate the center of the bounding box
+    const centerY = ((boundingBox.y0 + boundingBox.y1) / 2) * scale;
+
+    // Get the page's offset relative to the container
+    const pageRect = pageElement.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    // Calculate scroll position to center the bounding box
+    const pageOffsetInContainer = pageElement.offsetTop;
+    const targetScrollTop = pageOffsetInContainer + centerY - (containerRect.height / 2);
+
+    // Scroll instantly to center the field
+    container.scrollTo({
+      top: targetScrollTop,
+      behavior: 'auto'
+    });
+
+    setPageNumber(page);
+  }, [scale, scrollToPage]);
+
+  // Expose scroll methods to parent
   if (typeof window !== 'undefined') {
     (window as any).pdfScrollToPage = scrollToPage;
+    (window as any).pdfScrollToField = scrollToField;
   }
 
   const goToPrevPage = () => {
@@ -61,7 +99,7 @@ export function PDFViewer({ url, highlights = [], activeField, onPageClick }: PD
     setPageNumber(newPage);
     scrollToPage(newPage);
   };
-  
+
   const goToNextPage = () => {
     const newPage = Math.min(pageNumber + 1, numPages);
     setPageNumber(newPage);
@@ -70,15 +108,15 @@ export function PDFViewer({ url, highlights = [], activeField, onPageClick }: PD
   const zoomIn = () => setScale((prev) => Math.min(prev + 0.2, 3));
   const zoomOut = () => setScale((prev) => Math.max(prev - 0.2, 0.5));
 
-  // Get highlights for current page
-  const getHighlightsForPage = (page: number) => {
-    return highlights.filter((h) => h.page === page);
+  // Get heatmap fields for current page
+  const getFieldsForPage = (page: number) => {
+    return heatmapFields.filter((f) => f.page === page);
   };
 
   return (
     <div className="flex flex-col h-full bg-gray-100">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-white border-b">
+      <div className="flex items-center justify-between px-4 py-2 bg-white border-b gap-4">
         <div className="flex items-center gap-2">
           <button
             onClick={goToPrevPage}
@@ -98,6 +136,15 @@ export function PDFViewer({ url, highlights = [], activeField, onPageClick }: PD
             Next →
           </button>
         </div>
+
+        {/* Heatmap Legend */}
+        <div className="flex-shrink-0">
+          <HeatmapLegend
+            onToggle={() => setHeatmapVisible(!heatmapVisible)}
+            isVisible={heatmapVisible}
+          />
+        </div>
+
         <div className="flex items-center gap-2">
           <button
             onClick={zoomOut}
@@ -136,8 +183,8 @@ export function PDFViewer({ url, highlights = [], activeField, onPageClick }: PD
         >
           {Array.from(new Array(numPages), (_, index) => {
             const page = index + 1;
-            const pageHighlights = getHighlightsForPage(page);
-            const isActivePage = activeField && pageHighlights.some(h => h.fieldPath === activeField);
+            const pageFields = getFieldsForPage(page);
+            const isActivePage = activeField && pageFields.some(f => f.fieldPath === activeField);
 
             return (
               <div
@@ -154,24 +201,16 @@ export function PDFViewer({ url, highlights = [], activeField, onPageClick }: PD
                   renderAnnotationLayer={false}
                   className="shadow-lg"
                 />
-                
-                {/* Highlight overlays */}
-                {pageHighlights.map((highlight, idx) => (
-                  <div
-                    key={`${highlight.fieldPath}_${idx}`}
-                    className={`absolute pointer-events-none transition-all duration-300 ${
-                      highlight.fieldPath === activeField
-                        ? 'bg-yellow-300 opacity-60 animate-pulse'
-                        : 'bg-yellow-200 opacity-40'
-                    }`}
-                    style={{
-                      left: `${(highlight.boundingBox?.x0 || 0) * scale}px`,
-                      top: `${(highlight.boundingBox?.y0 || 0) * scale}px`,
-                      width: `${((highlight.boundingBox?.x1 || 100) - (highlight.boundingBox?.x0 || 0)) * scale}px`,
-                      height: `${((highlight.boundingBox?.y1 || 20) - (highlight.boundingBox?.y0 || 0)) * scale}px`,
-                    }}
+
+                {/* Confidence Heatmap Overlays */}
+                {heatmapVisible && (
+                  <ConfidenceHeatmap
+                    fields={pageFields}
+                    activeField={activeField || null}
+                    onFieldClick={onFieldClick || (() => {})}
+                    scale={scale}
                   />
-                ))}
+                )}
               </div>
             );
           })}
