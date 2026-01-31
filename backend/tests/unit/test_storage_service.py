@@ -273,12 +273,13 @@ def test_storage_service_singleton():
     """
     Test that storage_service is properly initialized as a singleton.
     """
-    from app.services.storage_service import storage_service
+    from app.services.storage_service import storage_service, LocalStorageBackend, S3StorageBackend
 
     assert storage_service is not None
     assert isinstance(storage_service, StorageService)
     assert hasattr(storage_service, 'backend')
-    # Backend should have either local_path or s3_client depending on config
+    # Backend should be either LocalStorageBackend or S3StorageBackend
+    assert isinstance(storage_service.backend, (LocalStorageBackend, S3StorageBackend))
     assert hasattr(storage_service.backend, 'upload_pdf')
 
 

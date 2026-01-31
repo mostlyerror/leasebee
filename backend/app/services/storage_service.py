@@ -1,7 +1,7 @@
 """Storage service for handling PDF file uploads - supports S3 and local storage."""
 import os
 import uuid
-from typing import BinaryIO, Protocol
+from typing import BinaryIO
 from pathlib import Path
 from abc import ABC, abstractmethod
 
