@@ -6,6 +6,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { leaseApi, extractionApi, handleApiError } from '@/lib/api';
 import { PDFViewer } from '@/components/pdf/PDFViewer';
 import { FieldReviewPanel } from '@/components/review/FieldReviewPanel';
+import { ExtractionProgress } from '@/components/ui/ExtractionProgress';
 import { Loader2, ArrowLeft, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -41,10 +42,11 @@ interface FieldFeedback {
 export default function ReviewPage() {
   const params = useParams();
   const leaseId = parseInt(params.id as string);
-  
+
   const [activeField, setActiveField] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Record<string, FieldFeedback>>({});
   const [pdfUrl, setPdfUrl] = useState<string>('');
+  const [showProgress, setShowProgress] = useState(true);
 
   const { data: lease, isLoading: leaseLoading } = useQuery({
     queryKey: ['lease', leaseId],
@@ -52,13 +54,20 @@ export default function ReviewPage() {
     enabled: !!leaseId,
   });
 
-  const { data: extraction, isLoading: extractionLoading } = useQuery({
+  const { data: extraction, isLoading: extractionLoading, refetch: refetchExtraction } = useQuery({
     queryKey: ['extraction', leaseId],
     queryFn: async () => {
       const extractions = await extractionApi.getByLease(leaseId);
-      return extractions[0];
+      if (extractions && extractions.length > 0) {
+        // Extraction exists, hide progress
+        setShowProgress(false);
+        return extractions[0];
+      }
+      return null;
     },
     enabled: !!leaseId,
+    retry: 3,
+    retryDelay: 2000, // Retry every 2 seconds
   });
 
   const { data: schema } = useQuery({
@@ -71,6 +80,11 @@ export default function ReviewPage() {
       setPdfUrl(`${process.env.NEXT_PUBLIC_API_URL}/api/leases/${leaseId}/pdf`);
     }
   }, [lease, leaseId]);
+
+  const handleExtractionComplete = useCallback(() => {
+    setShowProgress(false);
+    refetchExtraction();
+  }, [refetchExtraction]);
 
   const fieldValues: FieldValue[] = useMemo(() => {
     if (!extraction || !schema) return [];
@@ -160,6 +174,60 @@ export default function ReviewPage() {
       alert(`Failed to submit feedback: ${handleApiError(error)}`);
     },
   });
+
+  // Show extraction progress if we're still extracting
+  if (showProgress) {
+    return (
+      <div className="h-screen flex flex-col bg-slate-50">
+        {/* Header */}
+        <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 flex items-center justify-between sticky top-16 z-40">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="hidden sm:inline">Back to Dashboard</span>
+            </Link>
+            <div className="h-6 w-px bg-slate-200 hidden sm:block" />
+            <div className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-slate-400" />
+              <span className="font-medium text-slate-900 truncate max-w-xs">
+                {lease?.original_filename || 'Loading...'}
+              </span>
+            </div>
+          </div>
+        </header>
+
+        {/* PDF and Progress Side by Side */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* PDF Preview */}
+          <div className="flex-1 bg-slate-100 flex items-center justify-center p-4">
+            {pdfUrl ? (
+              <PDFViewer
+                pdfUrl={pdfUrl}
+                activeHighlight={null}
+                onPageChange={() => {}}
+              />
+            ) : (
+              <div className="flex flex-col items-center gap-4">
+                <Loader2 className="w-12 h-12 animate-spin text-slate-400" />
+                <p className="text-slate-600">Loading PDF...</p>
+              </div>
+            )}
+          </div>
+
+          {/* Extraction Progress */}
+          <div className="w-1/2 bg-white border-l border-slate-200 flex items-center justify-center p-6">
+            <ExtractionProgress
+              leaseId={leaseId}
+              onComplete={handleExtractionComplete}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const isLoading = leaseLoading || extractionLoading;
 

@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { leaseApi, extractionApi, handleApiError } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Upload, Loader2, FileUp } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -14,30 +15,44 @@ interface UploadButtonProps {
 
 export function UploadButton({ onUploadComplete }: UploadButtonProps) {
   const router = useRouter();
+  const { currentOrg } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadStage, setUploadStage] = useState<'idle' | 'uploading' | 'extracting' | 'complete'>('idle');
   const [currentLeaseId, setCurrentLeaseId] = useState<number | null>(null);
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
+      if (!currentOrg) {
+        throw new Error('Please select an organization first');
+      }
+
       setUploadStage('uploading');
-      const lease = await leaseApi.upload(file);
+      const lease = await leaseApi.upload(file, currentOrg.id);
       setCurrentLeaseId(lease.id);
 
-      setUploadStage('extracting');
-      const extraction = await extractionApi.extract(lease.id);
+      // Trigger extraction (fire and forget - extraction runs async on backend)
+      // We don't await to avoid blocking the redirect
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/extractions/extract/${lease.id}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('leasebee_access_token')}`,
+        },
+      }).catch(err => {
+        console.error('Extraction failed:', err);
+      });
 
-      return { lease, extraction };
+      return lease;
     },
-    onSuccess: ({ lease }) => {
-      setUploadStage('complete');
+    onSuccess: (lease) => {
       onUploadComplete?.();
+
+      // Redirect immediately to review page where we'll show progress
+      router.push(`/review/${lease.id}`);
+
+      // Reset state after navigation
       setTimeout(() => {
-        router.push(`/review/${lease.id}`);
-        setTimeout(() => {
-          setUploadStage('idle');
-          setCurrentLeaseId(null);
-        }, 500);
+        setUploadStage('idle');
+        setCurrentLeaseId(null);
       }, 500);
     },
     onError: (error: any) => {
@@ -62,28 +77,6 @@ export function UploadButton({ onUploadComplete }: UploadButtonProps) {
     fileInputRef.current?.click();
   };
 
-  const handleProgressComplete = () => {
-    if (currentLeaseId) {
-      router.push(`/review/${currentLeaseId}`);
-      setTimeout(() => {
-        setUploadStage('idle');
-        setCurrentLeaseId(null);
-      }, 500);
-    }
-  };
-
-  if (uploadStage === 'extracting' && currentLeaseId) {
-    return (
-      <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="w-full max-w-2xl">
-          <ExtractionProgress 
-            leaseId={currentLeaseId} 
-            onComplete={handleProgressComplete}
-          />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
