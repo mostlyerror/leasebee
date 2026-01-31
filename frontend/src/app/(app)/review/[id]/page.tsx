@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { leaseApi, extractionApi, handleApiError } from '@/lib/api';
-import { PDFViewer } from '@/components/pdf/PDFViewer';
+import { PDFViewer, PDFViewerRef } from '@/components/pdf/PDFViewer';
 import { FieldReviewPanel } from '@/components/review/FieldReviewPanel';
 import { ExtractionProgress } from '@/components/ui/ExtractionProgress';
 import { Loader2, ArrowLeft, FileText } from 'lucide-react';
@@ -42,6 +42,7 @@ interface FieldFeedback {
 export default function ReviewPage() {
   const params = useParams();
   const leaseId = parseInt(params.id as string);
+  const pdfViewerRef = useRef<PDFViewerRef>(null);
 
   const [activeField, setActiveField] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Record<string, FieldFeedback>>({});
@@ -126,12 +127,12 @@ export default function ReviewPage() {
   const handleFieldClick = useCallback((fieldPath: string) => {
     setActiveField(fieldPath);
     const field = fieldValues.find((f) => f.path === fieldPath);
-    if (field?.citation?.page && typeof window !== 'undefined') {
+    if (field?.citation?.page && pdfViewerRef.current) {
       // Use scrollToField if bounding box exists, otherwise fall back to scrollToPage
       if (field.citation.bounding_box) {
-        (window as any).pdfScrollToField?.(field.citation.page, field.citation.bounding_box);
+        pdfViewerRef.current.scrollToField(field.citation.page, field.citation.bounding_box);
       } else {
-        (window as any).pdfScrollToPage?.(field.citation.page);
+        pdfViewerRef.current.scrollToPage(field.citation.page);
       }
     }
   }, [fieldValues]);
@@ -291,6 +292,7 @@ export default function ReviewPage() {
         {/* Left Pane - PDF Viewer */}
         <div className="w-1/2 border-r border-slate-200 bg-slate-100">
           <PDFViewer
+            ref={pdfViewerRef}
             url={pdfUrl}
             heatmapFields={heatmapFields}
             activeField={activeField}

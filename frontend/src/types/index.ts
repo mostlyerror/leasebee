@@ -37,12 +37,14 @@ export enum FieldType {
   LIST = "list",
 }
 
+export type LeaseStatusType = 'uploaded' | 'processing' | 'completed' | 'failed';
+
 export interface Lease {
   id: number;
   filename: string;
   original_filename: string;
   file_size: number;
-  status: 'uploaded' | 'processing' | 'completed' | 'failed';
+  status: LeaseStatusType;
   page_count?: number | null;
   error_message?: string | null;
   created_at: string;

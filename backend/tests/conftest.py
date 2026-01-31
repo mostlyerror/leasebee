@@ -56,10 +56,19 @@ _mock_s3_client.generate_presigned_url.return_value = 'https://fake-s3-url.com/t
 _boto3_patch = patch('boto3.client', return_value=_mock_s3_client)
 _boto3_patch.start()
 
-# Now import and recreate storage service
+# Now import and recreate storage service with mocked backend
 from app.services import storage_service as _storage_module
-from app.services.storage_service import StorageService
-_storage_module.storage_service = StorageService()
+from app.services.storage_service import StorageService, S3StorageBackend
+from app.core.config import settings
+
+# Create storage service with mocked S3 backend
+_mock_backend = S3StorageBackend(
+    bucket_name=settings.S3_BUCKET_NAME,
+    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+    region_name=settings.AWS_REGION
+)
+_storage_module.storage_service = StorageService(_mock_backend)
 
 
 # ============================================================================
@@ -191,11 +200,17 @@ def mock_s3_client(mocker):
     # Import here to avoid circular imports
     try:
         from app.services import storage_service as storage_module
-        from app.services.storage_service import StorageService
+        from app.services.storage_service import StorageService, S3StorageBackend
         from app.core.config import settings
         
-        # Create new instance with mocked boto3
-        storage_module.storage_service = StorageService()
+        # Create new instance with mocked boto3 backend
+        mock_backend = S3StorageBackend(
+            bucket_name=settings.S3_BUCKET_NAME,
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name=settings.AWS_REGION
+        )
+        storage_module.storage_service = StorageService(mock_backend)
     except Exception:
         # Unit tests handle their own mocking
         pass
