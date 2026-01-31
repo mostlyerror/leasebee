@@ -8,7 +8,18 @@ import pytest
 from io import BytesIO
 from botocore.exceptions import ClientError
 
-from app.services.storage_service import StorageService
+from app.services.storage_service import StorageService, S3StorageBackend
+
+
+def _create_test_storage_service():
+    """Helper to create storage service with mocked S3 backend for testing."""
+    backend = S3StorageBackend(
+        bucket_name='test-bucket',
+        aws_access_key_id='test-key',
+        aws_secret_access_key='test-secret',
+        region_name='us-east-1'
+    )
+    return StorageService(backend)
 
 
 @pytest.mark.unit
@@ -27,8 +38,8 @@ def test_upload_pdf_success(mocker, mock_s3_client):
     mock_uuid.__str__ = mocker.MagicMock(return_value="test-uuid-12345")
     mocker.patch('uuid.uuid4', return_value=mock_uuid)
 
-    # Create storage service
-    storage = StorageService()
+    # Create storage service with S3 backend
+    storage = _create_test_storage_service()
 
     # Create test file
     test_file = BytesIO(b"test pdf content")
@@ -69,7 +80,7 @@ def test_upload_pdf_failure(mocker, mock_s3_client):
         'upload_fileobj'
     )
 
-    storage = StorageService()
+    storage = _create_test_storage_service()
     test_file = BytesIO(b"test content")
 
     # Verify exception is raised
@@ -90,7 +101,7 @@ def test_upload_pdf_preserves_extension(mocker, mock_s3_client):
     mock_uuid.__str__ = mocker.MagicMock(return_value="abc123")
     mocker.patch('uuid.uuid4', return_value=mock_uuid)
 
-    storage = StorageService()
+    storage = _create_test_storage_service()
 
     # Test .pdf extension
     test_file = BytesIO(b"content")
@@ -112,7 +123,7 @@ def test_download_pdf_success(mock_s3_client):
     - get_object called with correct parameters
     - File content is correctly retrieved
     """
-    storage = StorageService()
+    storage = _create_test_storage_service()
     file_path = "leases/test-file.pdf"
 
     # Download file
@@ -141,7 +152,7 @@ def test_download_pdf_failure(mock_s3_client):
         'get_object'
     )
 
-    storage = StorageService()
+    storage = _create_test_storage_service()
 
     # Verify exception is raised
     with pytest.raises(Exception) as exc_info:
@@ -159,7 +170,7 @@ def test_delete_pdf_success(mock_s3_client):
     - delete_object called with correct parameters
     - Returns True on success
     """
-    storage = StorageService()
+    storage = _create_test_storage_service()
     file_path = "leases/test-file.pdf"
 
     # Delete file
@@ -186,7 +197,7 @@ def test_delete_pdf_failure(mock_s3_client):
         'delete_object'
     )
 
-    storage = StorageService()
+    storage = _create_test_storage_service()
 
     # Verify exception is raised
     with pytest.raises(Exception) as exc_info:
@@ -205,7 +216,7 @@ def test_get_presigned_url_success(mock_s3_client):
     - Default expiration is 3600 seconds
     - Custom expiration can be specified
     """
-    storage = StorageService()
+    storage = _create_test_storage_service()
     file_path = "leases/test-file.pdf"
 
     # Test default expiration
@@ -248,7 +259,7 @@ def test_get_presigned_url_failure(mock_s3_client):
         'generate_presigned_url'
     )
 
-    storage = StorageService()
+    storage = _create_test_storage_service()
 
     # Verify exception is raised
     with pytest.raises(Exception) as exc_info:
@@ -266,8 +277,9 @@ def test_storage_service_singleton():
 
     assert storage_service is not None
     assert isinstance(storage_service, StorageService)
-    assert hasattr(storage_service, 's3_client')
-    assert hasattr(storage_service, 'bucket_name')
+    assert hasattr(storage_service, 'backend')
+    # Backend should have either local_path or s3_client depending on config
+    assert hasattr(storage_service.backend, 'upload_pdf')
 
 
 @pytest.mark.unit
@@ -293,7 +305,7 @@ def test_filename_uniqueness(mocker, mock_s3_client):
 
     mocker.patch('uuid.uuid4', side_effect=uuid_side_effect)
 
-    storage = StorageService()
+    storage = _create_test_storage_service()
 
     # Upload three files
     filenames = []
@@ -320,7 +332,7 @@ def test_s3_key_format(mocker, mock_s3_client):
     mock_uuid.__str__ = mocker.MagicMock(return_value="test-123")
     mocker.patch('uuid.uuid4', return_value=mock_uuid)
 
-    storage = StorageService()
+    storage = _create_test_storage_service()
     test_file = BytesIO(b"content")
 
     result = storage.upload_pdf(test_file, "document.pdf")
