@@ -79,3 +79,4 @@ logs/
 # Uploaded files (local development)
 uploads/
 pdfs/
+.env.backup

@@ -14,6 +14,12 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     SECRET_KEY: str
 
+    # Authentication
+    JWT_SECRET_KEY: str | None = None  # Falls back to SECRET_KEY if not set
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+
     # Database
     DATABASE_URL: str
 
@@ -48,6 +54,11 @@ class Settings(BaseSettings):
     def allowed_file_types_list(self) -> List[str]:
         """Parse allowed file types."""
         return [ft.strip() for ft in self.ALLOWED_FILE_TYPES.split(",")]
+
+    @property
+    def jwt_secret(self) -> str:
+        """Get JWT secret key, falling back to SECRET_KEY."""
+        return self.JWT_SECRET_KEY or self.SECRET_KEY
 
     class Config:
         env_file = ".env"

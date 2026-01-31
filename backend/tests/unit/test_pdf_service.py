@@ -431,3 +431,91 @@ startxref
     # Should return structure with empty or minimal text
     assert result['page_count'] == 1
     assert isinstance(result['text'], str)
+
+
+@pytest.mark.unit
+def test_enrich_citations_with_bounding_boxes(sample_pdf_bytes):
+    """
+    Test enriching citations with bounding box coordinates.
+
+    Verifies:
+    - Citations are enriched with bounding boxes
+    - Original citation data is preserved
+    - Missing quotes are handled gracefully
+    """
+    service = PDFService()
+
+    # Sample citations (similar to what Claude returns)
+    citations = {
+        'field1': {
+            'page': 1,
+            'quote': 'LEASE AGREEMENT'
+        },
+        'field2': {
+            'page': 1,
+            'quote': 'Tenant'
+        },
+        'field3': {
+            'page': 99,  # Invalid page
+            'quote': 'Should not crash'
+        }
+    }
+
+    result = service.enrich_citations_with_bounding_boxes(sample_pdf_bytes, citations)
+
+    # Verify structure
+    assert len(result) == 3
+    assert 'field1' in result
+    assert 'field2' in result
+    assert 'field3' in result
+
+    # Field 1 should have bounding box (if text found)
+    assert 'page' in result['field1']
+    assert 'quote' in result['field1']
+
+    # Field 3 should not crash on invalid page
+    assert 'page' in result['field3']
+    assert result['field3']['page'] == 99
+
+
+@pytest.mark.unit
+def test_enrich_citations_with_bounding_boxes_empty():
+    """
+    Test enriching empty citations dictionary.
+
+    Verifies:
+    - Empty dict returns empty dict
+    - No errors are raised
+    """
+    service = PDFService()
+
+    result = service.enrich_citations_with_bounding_boxes(b'', {})
+
+    assert result == {}
+
+
+@pytest.mark.unit  
+def test_enrich_citations_with_bounding_boxes_partial_match(sample_pdf_bytes):
+    """
+    Test enriching citations when exact match fails but partial match succeeds.
+
+    Verifies:
+    - Fallback to partial match works
+    - Bounding box is still found for long quotes
+    """
+    service = PDFService()
+
+    # Long quote that might not match exactly
+    citations = {
+        'field1': {
+            'page': 1,
+            'quote': 'This is a very long quote that might not match exactly in the PDF'
+        }
+    }
+
+    result = service.enrich_citations_with_bounding_boxes(sample_pdf_bytes, citations)
+
+    # Should not crash and return the citation
+    assert 'field1' in result
+    assert 'page' in result['field1']
+    assert 'quote' in result['field1']

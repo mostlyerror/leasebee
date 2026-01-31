@@ -139,6 +139,87 @@ class PDFService:
         except Exception as e:
             raise Exception(f"Failed to extract page text: {str(e)}")
 
+    @staticmethod
+    def enrich_citations_with_bounding_boxes(
+        pdf_bytes: bytes,
+        citations: Dict[str, Dict]
+    ) -> Dict[str, Dict]:
+        """
+        Enrich citation dictionary with bounding box coordinates.
+
+        Args:
+            pdf_bytes: PDF file content as bytes
+            citations: Dictionary of citations with format:
+                {
+                    "field_path": {
+                        "page": int,
+                        "quote": str
+                    }
+                }
+
+        Returns:
+            Enhanced citations dictionary with bounding_box added:
+                {
+                    "field_path": {
+                        "page": int,
+                        "quote": str,
+                        "bounding_box": {"x0": float, "y0": float, "x1": float, "y1": float}
+                    }
+                }
+        """
+        if not citations:
+            return citations
+
+        try:
+            pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
+            enriched_citations = {}
+
+            for field_path, citation in citations.items():
+                enriched_citation = citation.copy()
+
+                if not citation or 'page' not in citation or 'quote' not in citation:
+                    enriched_citations[field_path] = enriched_citation
+                    continue
+
+                page_num = citation['page']
+                quote = citation['quote']
+
+                # Validate page number
+                if page_num < 1 or page_num > pdf_document.page_count:
+                    enriched_citations[field_path] = enriched_citation
+                    continue
+
+                # Search for the quote on the specified page
+                page = pdf_document[page_num - 1]
+
+                # Try exact match first
+                text_instances = page.search_for(quote)
+
+                # If no exact match, try searching for first few words
+                if not text_instances and len(quote) > 20:
+                    # Try first 20 characters
+                    text_instances = page.search_for(quote[:20])
+
+                # Use the first match if found
+                if text_instances:
+                    bbox = text_instances[0]
+                    enriched_citation['bounding_box'] = {
+                        'x0': bbox.x0,
+                        'y0': bbox.y0,
+                        'x1': bbox.x1,
+                        'y1': bbox.y1,
+                    }
+
+                enriched_citations[field_path] = enriched_citation
+
+            pdf_document.close()
+            return enriched_citations
+
+        except Exception as e:
+            # If enrichment fails, return original citations
+            print(f"Warning: Failed to enrich citations with bounding boxes: {str(e)}")
+            return citations
+
 
 # Singleton instance
 pdf_service = PDFService()
