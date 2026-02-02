@@ -1,6 +1,7 @@
 """Field correction model for tracking user edits."""
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Float
+from sqlalchemy.dialects.postgresql import UUID
 
 from app.core.database import Base
 from sqlalchemy.orm import relationship
@@ -33,10 +34,18 @@ class FieldCorrection(Base):
 
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    corrected_by = Column(String, nullable=True)  # For future auth
+
+    # Multi-tenant field
+    corrected_by = Column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True
+    )
 
     # Relationships
     extraction = relationship("Extraction", back_populates="field_corrections")
+    corrector = relationship("User", foreign_keys=[corrected_by])
 
     def __repr__(self):
         return f"<FieldCorrection(id={self.id}, field={self.field_path}, extraction_id={self.extraction_id})>"

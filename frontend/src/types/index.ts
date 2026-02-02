@@ -37,26 +37,28 @@ export enum FieldType {
   LIST = "list",
 }
 
+export type LeaseStatusType = 'uploaded' | 'processing' | 'completed' | 'failed';
+
 export interface Lease {
   id: number;
   filename: string;
   original_filename: string;
   file_size: number;
-  status: LeaseStatus;
-  page_count?: number;
-  error_message?: string;
+  status: LeaseStatusType;
+  page_count?: number | null;
+  error_message?: string | null;
   created_at: string;
   updated_at: string;
-  processed_at?: string;
+  processed_at?: string | null;
 }
 
 export interface Extraction {
   id: number;
   lease_id: number;
   extractions: Record<string, any>;
-  reasoning?: Record<string, string>;
-  citations?: Record<string, Citation>;
-  confidence?: Record<string, number>;
+  reasoning?: Record<string, string> | null;
+  citations?: Record<string, Citation> | null;
+  confidence?: Record<string, number> | null;
   model_version: string;
   prompt_version?: string;
   input_tokens?: number;
