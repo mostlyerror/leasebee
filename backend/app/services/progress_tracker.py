@@ -141,7 +141,7 @@ class ProgressTracker:
             "operation_id": self.operation_id,
             "stage": self.current_stage.value,
             "stage_description": STAGE_DESCRIPTIONS[self.current_stage],
-            "percentage": min(percentage, 99),  # Cap at 99% until complete
+            "percentage": percentage,  # Allow 100%
             "elapsed_seconds": int(elapsed),
             "estimated_remaining_seconds": int(remaining),
             "tip": EDUCATIONAL_TIPS[self.current_tip_index],
