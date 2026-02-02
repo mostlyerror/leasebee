@@ -3,19 +3,11 @@
  */
 
 import { getAccessToken, getRefreshToken, setTokens, clearTokens, isTokenExpired } from './auth';
-import type { Lease, Extraction as TypeExtraction, FieldDefinition } from '../types';
+import type { Lease } from '../types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 // Types
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  avatar_url: string | null;
-  is_active: boolean;
-  created_at: string;
-}
 
 export interface Organization {
   id: string;
