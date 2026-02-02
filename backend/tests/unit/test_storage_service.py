@@ -134,7 +134,7 @@ def test_download_pdf_success(mock_s3_client):
 
     # Verify S3 get_object was called correctly
     mock_s3_client.get_object.assert_called_once_with(
-        Bucket=storage.bucket_name,
+        Bucket=storage.backend.bucket_name,
         Key=file_path
     )
 
@@ -181,7 +181,7 @@ def test_delete_pdf_success(mock_s3_client):
 
     # Verify S3 delete_object was called correctly
     mock_s3_client.delete_object.assert_called_once_with(
-        Bucket=storage.bucket_name,
+        Bucket=storage.backend.bucket_name,
         Key=file_path
     )
 
@@ -226,7 +226,7 @@ def test_get_presigned_url_success(mock_s3_client):
     mock_s3_client.generate_presigned_url.assert_called_once_with(
         'get_object',
         Params={
-            'Bucket': storage.bucket_name,
+            'Bucket': storage.backend.bucket_name,
             'Key': file_path
         },
         ExpiresIn=3600
@@ -241,7 +241,7 @@ def test_get_presigned_url_success(mock_s3_client):
     mock_s3_client.generate_presigned_url.assert_called_once_with(
         'get_object',
         Params={
-            'Bucket': storage.bucket_name,
+            'Bucket': storage.backend.bucket_name,
             'Key': file_path
         },
         ExpiresIn=7200
@@ -269,18 +269,37 @@ def test_get_presigned_url_failure(mock_s3_client):
 
 
 @pytest.mark.unit
-def test_storage_service_singleton():
+def test_storage_service_factory():
     """
-    Test that storage_service is properly initialized as a singleton.
+    Test that create_storage_service factory function creates instances correctly.
     """
-    from app.services.storage_service import storage_service, LocalStorageBackend, S3StorageBackend
-
+    from app.services.storage_service import create_storage_service, LocalStorageBackend, S3StorageBackend
+    
+    storage_service = create_storage_service()
+    
     assert storage_service is not None
     assert isinstance(storage_service, StorageService)
     assert hasattr(storage_service, 'backend')
     # Backend should be either LocalStorageBackend or S3StorageBackend
     assert isinstance(storage_service.backend, (LocalStorageBackend, S3StorageBackend))
     assert hasattr(storage_service.backend, 'upload_pdf')
+
+
+@pytest.mark.unit
+def test_storage_service_dependency_injection():
+    """
+    Test that get_storage_service dependency injection function works correctly.
+    """
+    from app.services.storage_service import get_storage_service, LocalStorageBackend, S3StorageBackend
+    
+    # Call dependency injection function
+    storage_service = get_storage_service()
+    
+    assert storage_service is not None
+    assert isinstance(storage_service, StorageService)
+    assert hasattr(storage_service, 'backend')
+    assert isinstance(storage_service.backend, (LocalStorageBackend, S3StorageBackend))
+
 
 
 @pytest.mark.unit

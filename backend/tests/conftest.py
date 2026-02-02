@@ -56,19 +56,18 @@ _mock_s3_client.generate_presigned_url.return_value = 'https://fake-s3-url.com/t
 _boto3_patch = patch('boto3.client', return_value=_mock_s3_client)
 _boto3_patch.start()
 
-# Now import and recreate storage service with mocked backend
-from app.services import storage_service as _storage_module
-from app.services.storage_service import StorageService, S3StorageBackend
+# Now import modules
+from app.services.storage_service import StorageService, S3StorageBackend, get_storage_service
 from app.core.config import settings
 
-# Create storage service with mocked S3 backend
+# Create storage service with mocked S3 backend for testing
 _mock_backend = S3StorageBackend(
     bucket_name=settings.S3_BUCKET_NAME,
     aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
     aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
     region_name=settings.AWS_REGION
 )
-_storage_module.storage_service = StorageService(_mock_backend)
+_test_storage_service = StorageService(_mock_backend)
 
 
 # ============================================================================
@@ -129,6 +128,7 @@ def client(test_db, mock_s3_client, mock_claude_client):
 
     This fixture:
     - Overrides the database dependency to use test_db
+    - Overrides the storage service dependency to use mocked backend
     - Automatically applies S3 and Claude mocks
     - Cleans up dependency overrides after the test
 
@@ -146,7 +146,12 @@ def client(test_db, mock_s3_client, mock_claude_client):
         finally:
             pass
 
+    def override_get_storage_service():
+        """Override storage service with mocked backend."""
+        return _test_storage_service
+
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_storage_service] = override_get_storage_service
 
     with TestClient(app) as test_client:
         yield test_client
@@ -195,25 +200,6 @@ def mock_s3_client(mocker):
 
     # Patch boto3.client
     mocker.patch('boto3.client', return_value=mock_client)
-    
-    # For integration tests: recreate the storage_service singleton with mock
-    # Import here to avoid circular imports
-    try:
-        from app.services import storage_service as storage_module
-        from app.services.storage_service import StorageService, S3StorageBackend
-        from app.core.config import settings
-        
-        # Create new instance with mocked boto3 backend
-        mock_backend = S3StorageBackend(
-            bucket_name=settings.S3_BUCKET_NAME,
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            region_name=settings.AWS_REGION
-        )
-        storage_module.storage_service = StorageService(mock_backend)
-    except Exception:
-        # Unit tests handle their own mocking
-        pass
 
     return mock_client
 

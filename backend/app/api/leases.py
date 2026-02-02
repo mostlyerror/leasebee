@@ -11,7 +11,7 @@ from app.core.dependencies import get_optional_user, get_current_user
 from app.models.lease import Lease, LeaseStatus
 from app.models.user import User
 from app.schemas.pydantic_schemas import LeaseResponse
-from app.services.storage_service import storage_service
+from app.services.storage_service import get_storage_service, StorageService
 from app.services.pdf_service import pdf_service
 
 router = APIRouter()
@@ -23,6 +23,7 @@ async def upload_lease(
     organization_id: Optional[UUID] = Query(None, description="Organization ID (required if authenticated)"),
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_optional_user),
+    storage_service: StorageService = Depends(get_storage_service),
 ):
     """
     Upload a lease PDF file.
@@ -190,6 +191,7 @@ async def delete_lease(
     lease_id: int,
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_optional_user),
+    storage_service: StorageService = Depends(get_storage_service),
 ):
     """
     Delete a lease and its associated file.
@@ -232,7 +234,8 @@ async def delete_lease(
 @router.get("/{lease_id}/download-url")
 async def get_download_url(
     lease_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    storage_service: StorageService = Depends(get_storage_service),
 ):
     """
     Get a presigned URL for downloading the lease PDF.
@@ -270,7 +273,8 @@ async def get_download_url(
 @router.get("/{lease_id}/pdf")
 async def get_lease_pdf(
     lease_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    storage_service: StorageService = Depends(get_storage_service),
 ):
     """
     Get the lease PDF file directly.

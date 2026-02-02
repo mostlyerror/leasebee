@@ -275,5 +275,14 @@ def create_storage_service() -> StorageService:
     return StorageService(backend)
 
 
-# Singleton instance - created using factory
-storage_service = create_storage_service()
+# Dependency injection function for FastAPI
+def get_storage_service() -> StorageService:
+    """Get storage service instance for dependency injection.
+    
+    This function is used with FastAPI's Depends() to inject the storage service
+    into route handlers, allowing for flexible backend configuration and testing.
+    
+    Returns:
+        StorageService instance with appropriate backend
+    """
+    return create_storage_service()

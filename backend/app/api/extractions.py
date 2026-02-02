@@ -19,7 +19,7 @@ from app.schemas.pydantic_schemas import (
     FieldDefinition,
 )
 from app.schemas.field_schema import LEASE_FIELDS, FieldCategory, get_field_by_path
-from app.services.storage_service import storage_service
+from app.services.storage_service import get_storage_service, StorageService
 from app.services.claude_service import claude_service
 from app.services.validation_service import validation_service
 from app.services.pdf_service import pdf_service
@@ -33,7 +33,8 @@ async def extract_lease_data(
     lease_id: int,
     background_tasks: BackgroundTasks,
     use_multi_pass: bool = True,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    storage_service: StorageService = Depends(get_storage_service),
 ):
     """
     Extract data from a lease PDF using Claude.
