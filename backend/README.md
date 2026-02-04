@@ -177,3 +177,46 @@ Key differences:
 - Configure proper `CORS_ORIGINS`
 - Use production database
 - Monitor costs and errors
+
+## Production Deployment
+
+**Ready to deploy? Check out [DEPLOYMENT.md](./DEPLOYMENT.md)** for the complete Railway deployment guide.
+
+### Railway Deployment (Recommended)
+
+LeaseBee is **100% Railway-ready** with zero code changes needed!
+
+**Quick Deploy:**
+1. Create Railway account at railway.app
+2. Deploy backend service (FastAPI/Python)
+3. Deploy frontend service (Next.js)
+4. Add managed PostgreSQL database
+5. Configure environment variables
+6. Run: `railway run --service backend alembic upgrade head`
+
+**Cost:** ~$20-30/month for both services + database
+
+### Deployment Helper Scripts
+
+```bash
+# Generate SECRET_KEY for backend
+python scripts/generate_secret_key.py
+
+# Create admin user after deployment
+railway run --service backend python scripts/create_admin_user.py
+
+# Verify deployment is working
+./scripts/verify_deployment.sh https://your-backend.railway.app https://your-frontend.railway.app
+```
+
+### What's Included
+
+- ✅ Step-by-step deployment instructions
+- ✅ Environment variable templates
+- ✅ Database migration commands
+- ✅ AWS S3 setup guide
+- ✅ CORS configuration
+- ✅ Custom domain setup (optional)
+- ✅ Troubleshooting guide
+- ✅ Monitoring and maintenance tips
+

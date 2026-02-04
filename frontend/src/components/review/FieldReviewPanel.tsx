@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, X, ChevronDown, ChevronUp, AlertCircle, Quote, FileText } from 'lucide-react';
+import { Check, X, ChevronDown, ChevronUp, AlertCircle, Quote, FileText, FileQuestion, Edit } from 'lucide-react';
 
 interface FieldValue {
   path: string;
@@ -62,12 +62,13 @@ export function FieldReviewPanel({
     return acc;
   }, {} as Record<string, FieldValue[]>);
 
-  const handleExpand = (fieldPath: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleExpand = (fieldPath: string) => {
     setExpandedField(expandedField === fieldPath ? null : fieldPath);
   };
 
   const handleFieldClick = (field: FieldValue) => {
+    // Toggle expansion and jump to PDF
+    handleExpand(field.path);
     onFieldClick(field.path);
   };
 
@@ -121,13 +122,16 @@ export function FieldReviewPanel({
                 const isAccepted = fieldFeedback?.isCorrect === true;
                 const isRejected = fieldFeedback?.isCorrect === false;
                 const isEditing = editingField === field.path;
+                const isEmpty = field.value === null || field.value === undefined || field.value === '';
 
                 return (
                   <div
                     key={field.path}
                     className={`transition-colors ${
                       isActive ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-                    } ${isAccepted ? 'bg-green-50' : ''} ${isRejected ? 'bg-red-50' : ''}`}
+                    } ${isAccepted ? 'bg-green-50' : ''} ${isRejected ? 'bg-red-50' : ''} ${
+                      isEmpty && !isAccepted && !isRejected ? 'bg-orange-50' : ''
+                    }`}
                   >
                     {/* Field Header - Click to jump to PDF source */}
                     <div
@@ -171,6 +175,7 @@ export function FieldReviewPanel({
                                 onChange={(e) => setEditValue(e.target.value)}
                                 className="flex-1 px-2 py-1 text-sm border rounded focus:ring-2 focus:ring-blue-500"
                                 onClick={(e) => e.stopPropagation()}
+                                placeholder="Enter the value from the document..."
                               />
                               <button
                                 onClick={(e) => {
@@ -182,64 +187,104 @@ export function FieldReviewPanel({
                                 Save
                               </button>
                             </div>
+                          ) : isEmpty ? (
+                            <div className="mt-2 flex items-start gap-2">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <FileQuestion className="w-4 h-4 text-orange-600" />
+                                  <span className="text-sm font-medium text-orange-900">
+                                    Not found in document
+                                  </span>
+                                </div>
+                                <p className="text-xs text-orange-700">
+                                  AI couldn't locate this field. <strong>Confirm it's missing</strong>, or <strong>add the value</strong> if it exists.
+                                </p>
+                              </div>
+                            </div>
                           ) : (
                             <div className="mt-1 text-sm text-gray-700">
-                              {field.value === null || field.value === undefined ? (
-                                <span className="text-gray-400 italic">Not found</span>
-                              ) : (
-                                <span className="font-medium">{String(field.value)}</span>
-                              )}
+                              <span className="font-medium">{String(field.value)}</span>
                             </div>
                           )}
                         </div>
 
                         {/* Action Buttons - Always Visible */}
                         <div className="flex items-center gap-1">
-                          <button
-                            onClick={(e) => handleAccept(field.path, e)}
-                            className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded ${
-                              isAccepted
-                                ? 'bg-green-600 text-white'
-                                : 'bg-white border border-gray-300 text-gray-700 hover:bg-green-50'
-                            }`}
-                            title="Accept extraction"
-                          >
-                            <Check className="w-3 h-3" />
-                            <span className="hidden sm:inline">Accept</span>
-                          </button>
-                          <button
-                            onClick={(e) => handleReject(field.path, e)}
-                            className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded ${
-                              isRejected
-                                ? 'bg-red-600 text-white'
-                                : 'bg-white border border-gray-300 text-gray-700 hover:bg-red-50'
-                            }`}
-                            title="Reject extraction"
-                          >
-                            <X className="w-3 h-3" />
-                            <span className="hidden sm:inline">Reject</span>
-                          </button>
-                          <button
-                            onClick={(e) => handleEditClick(field, e)}
-                            className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded bg-white border border-gray-300 text-gray-700 hover:bg-blue-50"
-                            title="Edit value"
-                          >
-                            <AlertCircle className="w-3 h-3" />
-                            <span className="hidden sm:inline">Edit</span>
-                          </button>
-                          
-                          {/* Expand button for details */}
-                          <button
-                            onClick={(e) => handleExpand(field.path, e)}
-                            className="ml-1 p-1 text-gray-400 hover:text-gray-600"
-                            title="View reasoning and source"
-                          >
+                          {isEmpty ? (
+                            <>
+                              <button
+                                onClick={(e) => handleAccept(field.path, e)}
+                                className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded ${
+                                  isAccepted
+                                    ? 'bg-green-600 text-white'
+                                    : 'bg-white border border-gray-300 text-green-700 hover:bg-green-50'
+                                }`}
+                                title="Accept that this field is not in the document"
+                              >
+                                <Check className="w-3 h-3" />
+                                <span className="hidden sm:inline">Confirm Missing</span>
+                                <span className="sm:hidden">Missing</span>
+                              </button>
+                              <button
+                                onClick={(e) => handleEditClick(field, e)}
+                                className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded border ${
+                                  isEditing
+                                    ? 'bg-blue-600 text-white border-blue-600'
+                                    : 'bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100'
+                                }`}
+                                title="This field exists in the document - add the correct value"
+                              >
+                                <Edit className="w-3 h-3" />
+                                <span className="hidden lg:inline">Field Exists - Add Value</span>
+                                <span className="hidden sm:inline lg:hidden">Add Value</span>
+                                <span className="sm:hidden">Add</span>
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={(e) => handleAccept(field.path, e)}
+                                className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded ${
+                                  isAccepted
+                                    ? 'bg-green-600 text-white'
+                                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-green-50'
+                                }`}
+                                title="Accept extraction"
+                              >
+                                <Check className="w-3 h-3" />
+                                <span className="hidden sm:inline">Accept</span>
+                              </button>
+                              <button
+                                onClick={(e) => handleReject(field.path, e)}
+                                className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded ${
+                                  isRejected
+                                    ? 'bg-red-600 text-white'
+                                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-red-50'
+                                }`}
+                                title="Reject extraction"
+                              >
+                                <X className="w-3 h-3" />
+                                <span className="hidden sm:inline">Reject</span>
+                              </button>
+                              <button
+                                onClick={(e) => handleEditClick(field, e)}
+                                className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded bg-white border border-gray-300 text-gray-700 hover:bg-blue-50"
+                                title="Edit value"
+                              >
+                                <AlertCircle className="w-3 h-3" />
+                                <span className="hidden sm:inline">Edit</span>
+                              </button>
+                            </>
+                          )}
+
+                          {/* Expand indicator - no longer a button, just visual indicator */}
+                          <div className="ml-1 p-1 text-gray-400">
                             {isExpanded ? (
                               <ChevronUp className="w-5 h-5" />
                             ) : (
                               <ChevronDown className="w-5 h-5" />
                             )}
-                          </button>
+                          </div>
                         </div>
                       </div>
                     </div>

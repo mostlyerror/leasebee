@@ -58,8 +58,10 @@ class FieldCorrectionCreate(BaseModel):
     field_path: str
     original_value: Optional[str] = None
     corrected_value: Optional[str] = None
-    correction_reason: Optional[str] = None
-    correction_category: Optional[str] = None
+    correction_type: Optional[str] = None  # 'accept', 'reject', or 'edit'
+    notes: Optional[str] = None
+    correction_reason: Optional[str] = None  # legacy
+    correction_category: Optional[str] = None  # legacy
 
 
 class FieldCorrectionResponse(BaseModel):
@@ -69,6 +71,8 @@ class FieldCorrectionResponse(BaseModel):
     field_path: str
     original_value: Optional[str] = None
     corrected_value: Optional[str] = None
+    correction_type: Optional[str] = None
+    notes: Optional[str] = None
     correction_reason: Optional[str] = None
     correction_category: Optional[str] = None
     created_at: datetime

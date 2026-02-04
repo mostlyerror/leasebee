@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { leaseApi, extractionApi, handleApiError } from '@/lib/api';
 import { PDFViewer } from '@/components/pdf/PDFViewer';
@@ -43,6 +43,7 @@ interface FieldFeedback {
 
 export default function ReviewPage() {
   const params = useParams();
+  const router = useRouter();
   const leaseId = parseInt(params.id as string);
 
   const [activeField, setActiveField] = useState<string | null>(null);
@@ -217,15 +218,8 @@ export default function ReviewPage() {
     onSuccess: () => {
       clearProgress(); // Clear localStorage after successful submission
       setFeedback({});
-      // Better success message with context
-      const message =
-        '✅ Feedback submitted successfully!\n\n' +
-        'Your corrections help improve the AI model over time.\n\n' +
-        '📊 View system performance and insights in Analytics.';
-      alert(message);
-
-      // Optionally redirect to analytics or dashboard
-      // router.push('/analytics');
+      // Redirect to analytics to show how their feedback contributes to continuous improvement
+      router.push('/analytics');
     },
     onError: (error) => {
       alert(`Failed to submit feedback: ${handleApiError(error)}`);

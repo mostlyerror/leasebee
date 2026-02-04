@@ -137,13 +137,8 @@ export function PDFViewer({ url, heatmapFields = [], activeField, onFieldClick, 
           </button>
         </div>
 
-        {/* Heatmap Legend */}
-        <div className="flex-shrink-0">
-          <HeatmapLegend
-            onToggle={() => setHeatmapVisible(!heatmapVisible)}
-            isVisible={heatmapVisible}
-          />
-        </div>
+        {/* Spacer */}
+        <div className="flex-1"></div>
 
         <div className="flex items-center gap-2">
           <button
@@ -183,8 +178,6 @@ export function PDFViewer({ url, heatmapFields = [], activeField, onFieldClick, 
         >
           {Array.from(new Array(numPages), (_, index) => {
             const page = index + 1;
-            const pageFields = getFieldsForPage(page);
-            const isActivePage = activeField && pageFields.some(f => f.fieldPath === activeField);
 
             return (
               <div
@@ -192,7 +185,7 @@ export function PDFViewer({ url, heatmapFields = [], activeField, onFieldClick, 
                 ref={(el) => {
                   if (el) pageRefs.current.set(page, el);
                 }}
-                className={`mb-4 relative ${isActivePage ? 'ring-4 ring-blue-400 rounded' : ''}`}
+                className="mb-4 relative"
               >
                 <Page
                   pageNumber={page}
@@ -201,16 +194,6 @@ export function PDFViewer({ url, heatmapFields = [], activeField, onFieldClick, 
                   renderAnnotationLayer={false}
                   className="shadow-lg"
                 />
-
-                {/* Confidence Heatmap Overlays */}
-                {heatmapVisible && (
-                  <ConfidenceHeatmap
-                    fields={pageFields}
-                    activeField={activeField || null}
-                    onFieldClick={onFieldClick || (() => {})}
-                    scale={scale}
-                  />
-                )}
               </div>
             );
           })}

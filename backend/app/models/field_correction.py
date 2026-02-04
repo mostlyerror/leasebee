@@ -25,8 +25,10 @@ class FieldCorrection(Base):
     corrected_value = Column(Text, nullable=True)  # User's correction
 
     # User feedback
-    correction_reason = Column(Text, nullable=True)  # Why was it wrong?
-    correction_category = Column(String, nullable=True)  # e.g., "wrong_value", "missing", "hallucination"
+    correction_type = Column(String, nullable=True)  # 'accept', 'reject', or 'edit'
+    notes = Column(Text, nullable=True)  # User notes/comments
+    correction_reason = Column(Text, nullable=True)  # Why was it wrong? (legacy)
+    correction_category = Column(String, nullable=True)  # e.g., "wrong_value", "missing", "hallucination" (legacy)
 
     # Original extraction metadata
     original_confidence = Column(Float, nullable=True)

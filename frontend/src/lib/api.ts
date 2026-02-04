@@ -389,3 +389,48 @@ export const extractionApi = {
     });
   },
 };
+
+// Analytics API
+export const analyticsApi = {
+  async getMetrics(): Promise<{
+    overallAccuracy: number;
+    totalExtractions: number;
+    totalCorrections: number;
+    avgConfidence: number;
+    trend: 'up' | 'down';
+  }> {
+    return fetchApi('/api/analytics/metrics');
+  },
+
+  async getFieldStats(): Promise<Array<{
+    field: string;
+    accuracy: number;
+    corrections: number;
+    avgConfidence: number;
+  }>> {
+    return fetchApi('/api/analytics/fields');
+  },
+
+  async getRecentCorrections(limit = 50): Promise<Array<{
+    id: number;
+    field_path: string;
+    original_value: string;
+    corrected_value: string;
+    correction_type: string;
+    notes: string;
+    created_at: string;
+    lease_filename: string;
+  }>> {
+    return fetchApi(`/api/analytics/recent-corrections?limit=${limit}`);
+  },
+
+  async getInsights(): Promise<Array<{
+    type: 'critical' | 'warning' | 'success';
+    field: string;
+    title: string;
+    message: string;
+    recommendation: string;
+  }>> {
+    return fetchApi('/api/analytics/insights');
+  },
+};
