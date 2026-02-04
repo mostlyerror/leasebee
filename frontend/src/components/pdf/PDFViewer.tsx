@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -34,7 +34,15 @@ interface PDFViewerProps {
   onPageClick?: (page: number, x: number, y: number) => void;
 }
 
-export function PDFViewer({ url, heatmapFields = [], activeField, onFieldClick, onPageClick }: PDFViewerProps) {
+export interface PDFViewerRef {
+  scrollToPage: (page: number) => void;
+  scrollToField: (page: number, boundingBox?: BoundingBox) => void;
+}
+
+export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(function PDFViewer(
+  { url, heatmapFields = [], activeField, onFieldClick, onPageClick },
+  ref
+) {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.2);
@@ -88,11 +96,11 @@ export function PDFViewer({ url, heatmapFields = [], activeField, onFieldClick, 
     setPageNumber(page);
   }, [scale, scrollToPage]);
 
-  // Expose scroll methods to parent
-  if (typeof window !== 'undefined') {
-    (window as any).pdfScrollToPage = scrollToPage;
-    (window as any).pdfScrollToField = scrollToField;
-  }
+  // Expose scroll methods to parent via ref
+  useImperativeHandle(ref, () => ({
+    scrollToPage,
+    scrollToField,
+  }), [scrollToPage, scrollToField]);
 
   const goToPrevPage = () => {
     const newPage = Math.max(pageNumber - 1, 1);
@@ -137,8 +145,13 @@ export function PDFViewer({ url, heatmapFields = [], activeField, onFieldClick, 
           </button>
         </div>
 
-        {/* Spacer */}
-        <div className="flex-1"></div>
+        {/* Heatmap Legend */}
+        <div className="flex-shrink-0">
+          <HeatmapLegend
+            onToggle={() => setHeatmapVisible(!heatmapVisible)}
+            isVisible={heatmapVisible}
+          />
+        </div>
 
         <div className="flex items-center gap-2">
           <button
@@ -178,6 +191,8 @@ export function PDFViewer({ url, heatmapFields = [], activeField, onFieldClick, 
         >
           {Array.from(new Array(numPages), (_, index) => {
             const page = index + 1;
+            const pageFields = getFieldsForPage(page);
+            const isActivePage = activeField && pageFields.some(f => f.fieldPath === activeField);
 
             return (
               <div
@@ -185,7 +200,7 @@ export function PDFViewer({ url, heatmapFields = [], activeField, onFieldClick, 
                 ref={(el) => {
                   if (el) pageRefs.current.set(page, el);
                 }}
-                className="mb-4 relative"
+                className={`mb-4 relative ${isActivePage ? 'ring-4 ring-blue-400 rounded' : ''}`}
               >
                 <Page
                   pageNumber={page}
@@ -194,6 +209,16 @@ export function PDFViewer({ url, heatmapFields = [], activeField, onFieldClick, 
                   renderAnnotationLayer={false}
                   className="shadow-lg"
                 />
+
+                {/* Confidence Heatmap Overlays */}
+                {heatmapVisible && (
+                  <ConfidenceHeatmap
+                    fields={pageFields}
+                    activeField={activeField || null}
+                    onFieldClick={onFieldClick || (() => {})}
+                    scale={scale}
+                  />
+                )}
               </div>
             );
           })}
@@ -201,4 +226,4 @@ export function PDFViewer({ url, heatmapFields = [], activeField, onFieldClick, 
       </div>
     </div>
   );
-}
+});

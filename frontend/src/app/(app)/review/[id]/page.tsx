@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { leaseApi, extractionApi, handleApiError } from '@/lib/api';
-import { PDFViewer } from '@/components/pdf/PDFViewer';
+import { PDFViewer, PDFViewerRef } from '@/components/pdf/PDFViewer';
 import { FieldReviewPanel } from '@/components/review/FieldReviewPanel';
 import { ExtractionProgress } from '@/components/ui/ExtractionProgress';
 import { RestoredProgressBanner } from '@/components/review/RestoredProgressBanner';
@@ -45,14 +45,12 @@ export default function ReviewPage() {
   const params = useParams();
   const router = useRouter();
   const leaseId = parseInt(params.id as string);
+  const pdfViewerRef = useRef<PDFViewerRef>(null);
 
   const [activeField, setActiveField] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Record<string, FieldFeedback>>({});
-  // Set PDF URL immediately - don't wait for lease data to load
-  const [pdfUrl] = useState<string>(() =>
-    `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/leases/${leaseId}/pdf`
-  );
-  const [extractionStatus, setExtractionStatus] = useState<'extracting' | 'loading' | 'ready'>('extracting');
+  const [pdfUrl, setPdfUrl] = useState<string>('');
+  const [showProgress, setShowProgress] = useState(true);
 
   const { data: lease, isLoading: leaseLoading } = useQuery({
     queryKey: ['lease', leaseId],
@@ -65,6 +63,8 @@ export default function ReviewPage() {
     queryFn: async () => {
       const extractions = await extractionApi.getByLease(leaseId);
       if (extractions && extractions.length > 0) {
+        // Extraction exists, hide progress
+        setShowProgress(false);
         return extractions[0];
       }
       return null;
@@ -93,15 +93,14 @@ export default function ReviewPage() {
     setFeedback,
   });
 
-  // Update extraction status when data is ready
   useEffect(() => {
-    if (extraction) {
-      setExtractionStatus('ready');
+    if (lease) {
+      setPdfUrl(`${process.env.NEXT_PUBLIC_API_URL}/api/leases/${leaseId}/pdf`);
     }
-  }, [extraction]);
+  }, [lease, leaseId]);
 
   const handleExtractionComplete = useCallback(() => {
-    setExtractionStatus('loading');
+    setShowProgress(false);
     refetchExtraction();
   }, [refetchExtraction]);
 
@@ -145,12 +144,12 @@ export default function ReviewPage() {
   const handleFieldClick = useCallback((fieldPath: string) => {
     setActiveField(fieldPath);
     const field = fieldValues.find((f) => f.path === fieldPath);
-    if (field?.citation?.page && typeof window !== 'undefined') {
+    if (field?.citation?.page && pdfViewerRef.current) {
       // Use scrollToField if bounding box exists, otherwise fall back to scrollToPage
       if (field.citation.bounding_box) {
-        (window as any).pdfScrollToField?.(field.citation.page, field.citation.bounding_box);
+        pdfViewerRef.current.scrollToField(field.citation.page, field.citation.bounding_box);
       } else {
-        (window as any).pdfScrollToPage?.(field.citation.page);
+        pdfViewerRef.current.scrollToPage(field.citation.page);
       }
     }
   }, [fieldValues]);
@@ -166,53 +165,23 @@ export default function ReviewPage() {
     }));
   }, []);
 
-  const handleAcceptAll = useCallback(() => {
-    const allFeedback: Record<string, FieldFeedback> = {};
-    fieldValues.forEach((field) => {
-      allFeedback[field.path] = {
-        fieldPath: field.path,
-        isCorrect: true,
-      };
-    });
-    setFeedback(allFeedback);
-  }, [fieldValues]);
-
-  const handleRejectAll = useCallback(() => {
-    const allFeedback: Record<string, FieldFeedback> = {};
-    fieldValues.forEach((field) => {
-      allFeedback[field.path] = {
-        fieldPath: field.path,
-        isCorrect: false,
-      };
-    });
-    setFeedback(allFeedback);
-  }, [fieldValues]);
-
   const submitFeedbackMutation = useMutation({
     mutationFn: async () => {
       if (!extraction) return;
-
-      // Helper to convert any value to string for API
-      const valueToString = (value: any): string => {
-        if (value === null || value === undefined) return '';
-        if (typeof value === 'string') return value;
-        if (typeof value === 'object') return JSON.stringify(value);
-        return String(value);
-      };
-
+      
       const promises = Object.values(feedback).map((item) => {
         const field = fieldValues.find((f) => f.path === item.fieldPath);
         if (!field) return null;
-
+        
         return extractionApi.submitCorrection(extraction.id, {
           field_path: item.fieldPath,
-          original_value: valueToString(field.value),
-          corrected_value: valueToString(item.correctedValue || field.value),
+          original_value: field.value,
+          corrected_value: item.correctedValue || field.value,
           correction_type: item.isCorrect ? 'accept' : item.correctedValue ? 'edit' : 'reject',
           notes: item.notes || '',
         });
       });
-
+      
       await Promise.all(promises.filter(Boolean));
     },
     onSuccess: () => {
@@ -227,12 +196,11 @@ export default function ReviewPage() {
   });
 
   // Show extraction progress if we're still extracting
-  if (extractionStatus === 'extracting') {
+  if (showProgress) {
     return (
-      // Break out of AppShell container - use full viewport width
-      <div className="fixed inset-0 top-16 flex flex-col bg-slate-50">
+      <div className="h-screen flex flex-col bg-slate-50">
         {/* Header */}
-        <header className="bg-white border-b border-slate-200 px-8 py-3 flex items-center justify-between z-40 shrink-0">
+        <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 flex items-center justify-between sticky top-16 z-40">
           <div className="flex items-center gap-4">
             <Link
               href="/"
@@ -244,7 +212,7 @@ export default function ReviewPage() {
             <div className="h-6 w-px bg-slate-200 hidden sm:block" />
             <div className="flex items-center gap-2">
               <FileText className="w-5 h-5 text-slate-400" />
-              <span className="font-medium text-slate-900 truncate max-w-md">
+              <span className="font-medium text-slate-900 truncate max-w-xs">
                 {lease?.original_filename || 'Loading...'}
               </span>
             </div>
@@ -253,14 +221,20 @@ export default function ReviewPage() {
 
         {/* PDF and Progress Side by Side */}
         <div className="flex-1 flex overflow-hidden">
-          {/* PDF Preview - Loads immediately */}
-          <div className="flex-1 bg-slate-100">
-            <PDFViewer
-              url={pdfUrl}
-              heatmapFields={[]}
-              activeField={null}
-              onFieldClick={() => {}}
-            />
+          {/* PDF Preview */}
+          <div className="flex-1 bg-slate-100 flex items-center justify-center p-4">
+            {pdfUrl ? (
+              <PDFViewer
+                pdfUrl={pdfUrl}
+                activeHighlight={null}
+                onPageChange={() => {}}
+              />
+            ) : (
+              <div className="flex flex-col items-center gap-4">
+                <Loader2 className="w-12 h-12 animate-spin text-slate-400" />
+                <p className="text-slate-600">Loading PDF...</p>
+              </div>
+            )}
           </div>
 
           {/* Extraction Progress */}
@@ -275,34 +249,20 @@ export default function ReviewPage() {
     );
   }
 
-  // Show loading transition when extraction is complete but data is being fetched
-  if (extractionStatus === 'loading' || (extractionStatus === 'ready' && !extraction)) {
-    return (
-      <div className="fixed inset-0 top-16 flex items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-amber-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-slate-900">Extraction Complete!</h3>
-          <p className="text-slate-600">Loading your data...</p>
-        </div>
-      </div>
-    );
-  }
-
   const isLoading = leaseLoading || extractionLoading;
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 top-16 flex items-center justify-center bg-slate-50">
+      <div className="flex items-center justify-center h-screen">
         <Loader2 className="h-12 w-12 animate-spin text-amber-500" />
       </div>
     );
   }
 
   return (
-    // Break out of AppShell container - use full viewport width for side-by-side layout
-    <div className="fixed inset-0 top-16 flex flex-col bg-slate-50">
+    <div className="h-screen flex flex-col bg-slate-50">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 px-8 py-3 flex items-center justify-between z-40 shrink-0">
+      <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 flex items-center justify-between sticky top-16 z-40">
         <div className="flex items-center gap-4">
           <Link
             href="/"
@@ -317,7 +277,7 @@ export default function ReviewPage() {
               <FileText className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-slate-900 truncate max-w-md">
+              <h1 className="text-lg font-semibold text-slate-900 truncate max-w-[200px] sm:max-w-md">
                 {lease?.original_filename}
               </h1>
               <p className="text-xs text-slate-500">
@@ -326,8 +286,8 @@ export default function ReviewPage() {
             </div>
           </div>
         </div>
-
-        <div className="flex items-center gap-3">
+        
+        <div className="flex items-center gap-4">
           <div className="hidden sm:flex items-center gap-2 text-sm text-slate-600">
             <span className="font-medium text-slate-900">
               {Object.keys(feedback).length}
@@ -336,28 +296,6 @@ export default function ReviewPage() {
             <span>{fieldValues.length}</span>
             <span className="text-slate-400">reviewed</span>
           </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={handleAcceptAll}
-              variant="outline"
-              size="sm"
-              className="text-green-700 border-green-300 hover:bg-green-50"
-            >
-              Accept All
-            </Button>
-            <Button
-              onClick={handleRejectAll}
-              variant="outline"
-              size="sm"
-              className="text-red-700 border-red-300 hover:bg-red-50"
-            >
-              Reject All
-            </Button>
-          </div>
-
-          <div className="h-6 w-px bg-slate-200" />
-
           <Button
             onClick={() => submitFeedbackMutation.mutate()}
             disabled={Object.keys(feedback).length < fieldValues.length || submitFeedbackMutation.isPending}
@@ -383,18 +321,19 @@ export default function ReviewPage() {
 
       {/* Main Content - 2 Pane Layout */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Pane - PDF Viewer (50% width) */}
-        <div className="flex-1 w-1/2 min-w-0 border-r border-slate-200 bg-slate-100">
+        {/* Left Pane - PDF Viewer */}
+        <div className="w-1/2 border-r border-slate-200 bg-slate-100">
           <PDFViewer
+            ref={pdfViewerRef}
             url={pdfUrl}
-            heatmapFields={[]}
+            heatmapFields={heatmapFields}
             activeField={activeField}
             onFieldClick={handleFieldClick}
           />
         </div>
 
-        {/* Right Pane - Field Review (50% width) */}
-        <div className="flex-1 w-1/2 min-w-0 bg-white overflow-hidden">
+        {/* Right Pane - Field Review */}
+        <div className="w-1/2 bg-white">
           <FieldReviewPanel
             fields={fieldValues}
             activeField={activeField}

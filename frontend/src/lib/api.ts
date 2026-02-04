@@ -3,18 +3,11 @@
  */
 
 import { getAccessToken, getRefreshToken, setTokens, clearTokens, isTokenExpired } from './auth';
+import type { Lease } from '../types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 // Types
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  avatar_url: string | null;
-  is_active: boolean;
-  created_at: string;
-}
 
 export interface Organization {
   id: string;
@@ -43,38 +36,13 @@ export interface TokenResponse {
   token_type: string;
 }
 
-export interface Lease {
-  id: number;
-  filename: string;
-  original_filename: string;
-  file_size: number;
-  status: 'uploaded' | 'processing' | 'completed' | 'failed';
-  page_count: number | null;
-  created_at: string;
-  updated_at: string;
+// Extending types from shared definitions
+export interface LeaseWithOrg extends Lease {
   organization_id?: string;
 }
 
-export interface Extraction {
-  id: number;
-  lease_id: number;
-  extractions: Record<string, any>;
-  reasoning: Record<string, string> | null;
-  citations: Record<string, { page: number; quote: string }> | null;
-  confidence: Record<string, number> | null;
-  model_version: string;
-  created_at: string;
-}
-
 export interface FieldSchema {
-  fields: Array<{
-    path: string;
-    label: string;
-    category: string;
-    type: string;
-    description: string;
-    required: boolean;
-  }>;
+  fields: FieldDefinition[];
 }
 
 // Error handler
@@ -341,21 +309,21 @@ export const leaseApi = {
 
 // Extraction API
 export const extractionApi = {
-  async extract(leaseId: number): Promise<Extraction> {
+  async extract(leaseId: number): Promise<TypeExtraction> {
     return fetchApi(`/api/extractions/extract/${leaseId}`, {
       method: 'POST',
     });
   },
 
-  async getByLease(leaseId: number): Promise<Extraction[]> {
+  async getByLease(leaseId: number): Promise<TypeExtraction[]> {
     return fetchApi(`/api/extractions/lease/${leaseId}`);
   },
 
-  async get(id: number): Promise<Extraction> {
+  async get(id: number): Promise<TypeExtraction> {
     return fetchApi(`/api/extractions/${id}`);
   },
 
-  async update(id: number, extractions: Record<string, any>): Promise<Extraction> {
+  async update(id: number, extractions: Record<string, any>): Promise<TypeExtraction> {
     return fetchApi(`/api/extractions/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -387,50 +355,5 @@ export const extractionApi = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(correction),
     });
-  },
-};
-
-// Analytics API
-export const analyticsApi = {
-  async getMetrics(): Promise<{
-    overallAccuracy: number;
-    totalExtractions: number;
-    totalCorrections: number;
-    avgConfidence: number;
-    trend: 'up' | 'down';
-  }> {
-    return fetchApi('/api/analytics/metrics');
-  },
-
-  async getFieldStats(): Promise<Array<{
-    field: string;
-    accuracy: number;
-    corrections: number;
-    avgConfidence: number;
-  }>> {
-    return fetchApi('/api/analytics/fields');
-  },
-
-  async getRecentCorrections(limit = 50): Promise<Array<{
-    id: number;
-    field_path: string;
-    original_value: string;
-    corrected_value: string;
-    correction_type: string;
-    notes: string;
-    created_at: string;
-    lease_filename: string;
-  }>> {
-    return fetchApi(`/api/analytics/recent-corrections?limit=${limit}`);
-  },
-
-  async getInsights(): Promise<Array<{
-    type: 'critical' | 'warning' | 'success';
-    field: string;
-    title: string;
-    message: string;
-    recommendation: string;
-  }>> {
-    return fetchApi('/api/analytics/insights');
   },
 };

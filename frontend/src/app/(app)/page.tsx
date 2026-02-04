@@ -1,14 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { leaseApi } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
-import { LeaseWorkQueue } from '@/components/leases/LeaseWorkQueue';
+import { LeaseList } from '@/components/leases/LeaseList';
 import { UploadButton } from '@/components/leases/UploadButton';
 import { EmptyState } from '@/components/leases/EmptyState';
+import { StatsCards } from '@/components/leases/StatsCards';
 import { CreateOrganizationModal } from '@/components/organizations/CreateOrganizationModal';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileText, Clock, CheckCircle2 } from 'lucide-react';
 
 export default function HomePage() {
   const { currentOrg, refetchUser } = useAuth();
@@ -18,7 +19,6 @@ export default function HomePage() {
     queryKey: ['leases', currentOrg?.id],
     queryFn: () => leaseApi.list(currentOrg?.id),
     enabled: !!currentOrg,
-    refetchInterval: 10000, // Poll every 10 seconds for processing updates
   });
 
   const handleEmptyStateUpload = () => {
@@ -26,7 +26,11 @@ export default function HomePage() {
     uploadInput?.click();
   };
 
-  // No organization - show create org prompt
+  // Calculate stats
+  const totalLeases = leases?.length || 0;
+  const processedLeases = leases?.filter(l => l.status === 'completed').length || 0;
+  const timeSaved = processedLeases * 120; // 2 hours saved per lease (120 minutes)
+
   if (!currentOrg) {
     return (
       <>
@@ -61,7 +65,6 @@ export default function HomePage() {
     );
   }
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -73,7 +76,6 @@ export default function HomePage() {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -84,65 +86,50 @@ export default function HomePage() {
     );
   }
 
-  // Filter for active work only (needs review, processing, failed)
-  const activeLeases = leases?.filter(
-    (l) => l.status === 'completed' || l.status === 'processing' || l.status === 'failed'
-  ) || [];
-
-  const hasActiveWork = activeLeases.length > 0;
-  const hasAnyLeases = leases && leases.length > 0;
+  const hasLeases = leases && leases.length > 0;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Empty State - Show full hero */}
-      {!hasActiveWork && (
-        <EmptyState
-          onUploadClick={handleEmptyStateUpload}
-          variant={hasAnyLeases ? 'all-caught-up' : 'first-time'}
+      {/* Header Section */}
+      <div className="mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 className="text-3xl font-bold text-slate-900">Dashboard</h2>
+            <p className="mt-1 text-slate-600">
+              Manage and review your commercial lease extractions
+            </p>
+          </div>
+          <UploadButton onUploadComplete={refetch} />
+        </div>
+      </div>
+
+      {/* Stats Cards - Only show if has leases */}
+      {hasLeases && (
+        <StatsCards 
+          totalLeases={totalLeases}
+          processedLeases={processedLeases}
+          timeSaved={timeSaved}
         />
       )}
 
-      {/* When there's active work, show prominent upload CTA + queue */}
-      {hasActiveWork && (
-        <>
-          {/* Prominent Upload CTA Section */}
-          <div className="mb-8">
-            <div className="bg-white border-2 border-slate-200 rounded-2xl p-8 sm:p-10 shadow-sm">
-              <div className="max-w-4xl mx-auto text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-2xl mb-4">
-                  <svg className="w-8 h-8 text-slate-700" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-                    <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd"/>
-                  </svg>
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-3">
-                  Ready to Extract Another Lease?
-                </h2>
-                <p className="text-lg text-slate-600 mb-6 max-w-2xl mx-auto">
-                  Upload a commercial lease PDF and get AI-powered extraction in under 2 minutes
-                </p>
-                <UploadButton
-                  onUploadComplete={refetch}
-                  variant="hero"
-                />
-              </div>
+      {/* Content */}
+      {hasLeases ? (
+        <div className="mt-8">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-slate-400" />
+                Your Leases
+              </h3>
+              <span className="text-sm text-slate-500">
+                {leases.length} document{leases.length !== 1 ? 's' : ''}
+              </span>
             </div>
+            <LeaseList leases={leases} onUpdate={refetch} />
           </div>
-
-          {/* Active Work Queue */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-xl font-bold text-slate-900">Active Leases</h3>
-                <p className="text-sm text-slate-600 mt-1">
-                  {activeLeases.length} {activeLeases.length === 1 ? 'lease' : 'leases'} need your attention
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <LeaseWorkQueue leases={activeLeases} onUpdate={refetch} />
-        </>
+        </div>
+      ) : (
+        <EmptyState onUploadClick={handleEmptyStateUpload} />
       )}
     </div>
   );

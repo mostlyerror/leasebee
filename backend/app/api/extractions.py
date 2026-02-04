@@ -178,6 +178,10 @@ async def extract_lease_data(
 
         db.commit()
         db.refresh(extraction)
+        
+        # Complete progress tracking
+        tracker.advance_stage(ExtractionStage.COMPLETE)
+        remove_tracker(operation_id)
 
         # Complete progress tracking
         # Keep tracker alive for 60 seconds so frontend can detect completion
