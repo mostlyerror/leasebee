@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.config import settings
-from app.api import leases, extractions, health, auth, organizations, teams
+from app.api import leases, extractions, health, auth, organizations, teams, analytics
 
 # Create FastAPI application
 app = FastAPI(
@@ -43,6 +43,7 @@ app.include_router(organizations.router, prefix="/api")
 app.include_router(teams.router, prefix="/api")
 app.include_router(leases.router, prefix="/api/leases", tags=["leases"])
 app.include_router(extractions.router, prefix="/api/extractions", tags=["extractions"])
+app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
 
 
 @app.get("/")

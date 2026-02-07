@@ -1,4 +1,5 @@
 """Extraction API endpoints."""
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
@@ -26,6 +27,12 @@ from app.services.pdf_service import pdf_service
 from app.services.progress_tracker import create_tracker, get_tracker, remove_tracker, ExtractionStage
 
 router = APIRouter()
+
+
+async def cleanup_tracker_after_delay(operation_id: str, delay_seconds: int = 60):
+    """Remove progress tracker after a delay to allow frontend to detect completion."""
+    await asyncio.sleep(delay_seconds)
+    remove_tracker(operation_id)
 
 
 @router.post("/extract/{lease_id}", response_model=ExtractionResponse, status_code=status.HTTP_201_CREATED)
@@ -175,6 +182,12 @@ async def extract_lease_data(
         # Complete progress tracking
         tracker.advance_stage(ExtractionStage.COMPLETE)
         remove_tracker(operation_id)
+
+        # Complete progress tracking
+        # Keep tracker alive for 60 seconds so frontend can detect completion
+        tracker.advance_stage(ExtractionStage.COMPLETE)
+        # Schedule tracker cleanup after 60 seconds
+        background_tasks.add_task(cleanup_tracker_after_delay, operation_id, 60)
 
         return extraction
 

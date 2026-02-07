@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { leaseApi, extractionApi, handleApiError } from '@/lib/api';
 import { PDFViewer, PDFViewerRef } from '@/components/pdf/PDFViewer';
 import { FieldReviewPanel } from '@/components/review/FieldReviewPanel';
 import { ExtractionProgress } from '@/components/ui/ExtractionProgress';
+import { RestoredProgressBanner } from '@/components/review/RestoredProgressBanner';
+import { useReviewPersistence } from '@/lib/hooks/useReviewPersistence';
 import { Loader2, ArrowLeft, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -41,6 +43,7 @@ interface FieldFeedback {
 
 export default function ReviewPage() {
   const params = useParams();
+  const router = useRouter();
   const leaseId = parseInt(params.id as string);
   const pdfViewerRef = useRef<PDFViewerRef>(null);
 
@@ -74,6 +77,20 @@ export default function ReviewPage() {
   const { data: schema } = useQuery({
     queryKey: ['schema'],
     queryFn: () => extractionApi.getFieldSchema(),
+  });
+
+  // Add persistence
+  const {
+    isRestored,
+    savedAt,
+    dismissRestoredBanner,
+    clearProgress,
+    lastSaved,
+  } = useReviewPersistence({
+    leaseId,
+    extractionId: extraction?.id,
+    feedback,
+    setFeedback,
   });
 
   useEffect(() => {
@@ -168,8 +185,10 @@ export default function ReviewPage() {
       await Promise.all(promises.filter(Boolean));
     },
     onSuccess: () => {
-      alert('Feedback submitted successfully!');
+      clearProgress(); // Clear localStorage after successful submission
       setFeedback({});
+      // Redirect to analytics to show how their feedback contributes to continuous improvement
+      router.push('/analytics');
     },
     onError: (error) => {
       alert(`Failed to submit feedback: ${handleApiError(error)}`);
@@ -286,6 +305,19 @@ export default function ReviewPage() {
           </Button>
         </div>
       </header>
+
+      {/* Show banner when progress is restored */}
+      {isRestored && (
+        <RestoredProgressBanner
+          savedAt={savedAt}
+          onDismiss={dismissRestoredBanner}
+          onDiscard={() => {
+            clearProgress();
+            setFeedback({});
+            dismissRestoredBanner();
+          }}
+        />
+      )}
 
       {/* Main Content - 2 Pane Layout */}
       <div className="flex-1 flex overflow-hidden">
