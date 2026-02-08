@@ -104,7 +104,7 @@ Once the backend is running, visit:
 **Frontend:** Deploy to Vercel
 **Database:** PostgreSQL on Railway or managed service
 
-See [docs/deployment.md](docs/deployment.md) for detailed instructions.
+See [docs/deployment/](docs/deployment/) for detailed instructions.
 
 ## Cost Estimates
 
