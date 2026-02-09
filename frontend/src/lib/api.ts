@@ -3,7 +3,8 @@
  */
 
 import { getAccessToken, getRefreshToken, setTokens, clearTokens, isTokenExpired } from './auth';
-import type { Lease } from '../types';
+import type { Lease, Extraction, FieldDefinition } from '../types';
+import type { User } from '../contexts/AuthContext';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -318,21 +319,21 @@ export const analyticsApi = {
 
 // Extraction API
 export const extractionApi = {
-  async extract(leaseId: number): Promise<TypeExtraction> {
+  async extract(leaseId: number): Promise<Extraction> {
     return fetchApi(`/api/extractions/extract/${leaseId}`, {
       method: 'POST',
     });
   },
 
-  async getByLease(leaseId: number): Promise<TypeExtraction[]> {
+  async getByLease(leaseId: number): Promise<Extraction[]> {
     return fetchApi(`/api/extractions/lease/${leaseId}`);
   },
 
-  async get(id: number): Promise<TypeExtraction> {
+  async get(id: number): Promise<Extraction> {
     return fetchApi(`/api/extractions/${id}`);
   },
 
-  async update(id: number, extractions: Record<string, any>): Promise<TypeExtraction> {
+  async update(id: number, extractions: Record<string, any>): Promise<Extraction> {
     return fetchApi(`/api/extractions/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },

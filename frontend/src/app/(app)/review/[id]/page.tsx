@@ -225,9 +225,7 @@ export default function ReviewPage() {
           <div className="flex-1 bg-slate-100 flex items-center justify-center p-4">
             {pdfUrl ? (
               <PDFViewer
-                pdfUrl={pdfUrl}
-                activeHighlight={null}
-                onPageChange={() => {}}
+                url={pdfUrl}
               />
             ) : (
               <div className="flex flex-col items-center gap-4">

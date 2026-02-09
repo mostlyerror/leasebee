@@ -147,7 +147,7 @@ export function ExtractionReview({ extraction, lease }: ExtractionReviewProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {fieldsByCategory[category].map((field) => {
+                  {fieldsByCategory[category].map((field: FieldDefinition) => {
                     const value = editedData[field.path];
                     const confidence = extraction.confidence?.[field.path];
                     const reasoning = extraction.reasoning?.[field.path];
