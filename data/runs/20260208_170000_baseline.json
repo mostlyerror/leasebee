@@ -1,0 +1,50 @@
+{
+  "summary": {
+    "run_id": "20260208_170000",
+    "label": "baseline",
+    "timestamp": "2026-02-08T17:00:00",
+    "leases_tested": 4,
+    "leases_errored": 4,
+    "average_accuracy": 55.8,
+    "total_cost": 2.13,
+    "total_time": 895.8,
+    "field_accuracy": {
+      "tenant_legal_name": 100.0,
+      "tenant_sq_feet": 100.0,
+      "base_rent_monthly": 75.0,
+      "base_rent_annual": 75.0,
+      "rent_per_sf_annual": 75.0,
+      "security_deposit": 75.0,
+      "exclusives": 100.0,
+      "lease_type": 100.0,
+      "permitted_use": 50.0,
+      "premise_address": 50.0,
+      "execution_date": 50.0,
+      "term_months": 25.0,
+      "renewal_options": 0.0,
+      "lease_expiration": 0.0,
+      "rent_commencement": 0.0,
+      "lease_commencement": 0.0,
+      "pro_rata_share": 0.0
+    },
+    "per_lease": [
+      {
+        "tenant": "Pappa Geno's Steak & Cheese",
+        "accuracy": 58.0
+      },
+      {
+        "tenant": "AT&T",
+        "accuracy": 69.0
+      },
+      {
+        "tenant": "Pappa Geno's Steak & Cheese",
+        "accuracy": 58.0
+      },
+      {
+        "tenant": "7 Spice",
+        "accuracy": 38.0
+      }
+    ]
+  },
+  "details": []
+}

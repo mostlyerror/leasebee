@@ -1,0 +1,173 @@
+[
+  {
+    "run_id": "20260208_170000",
+    "label": "baseline",
+    "timestamp": "2026-02-08T17:00:00",
+    "leases_tested": 4,
+    "leases_errored": 4,
+    "average_accuracy": 55.8,
+    "total_cost": 2.13,
+    "total_time": 895.8,
+    "field_accuracy": {
+      "tenant_legal_name": 100.0,
+      "tenant_sq_feet": 100.0,
+      "base_rent_monthly": 75.0,
+      "base_rent_annual": 75.0,
+      "rent_per_sf_annual": 75.0,
+      "security_deposit": 75.0,
+      "exclusives": 100.0,
+      "lease_type": 100.0,
+      "permitted_use": 50.0,
+      "premise_address": 50.0,
+      "execution_date": 50.0,
+      "term_months": 25.0,
+      "renewal_options": 0.0,
+      "lease_expiration": 0.0,
+      "rent_commencement": 0.0,
+      "lease_commencement": 0.0,
+      "pro_rata_share": 0.0
+    },
+    "per_lease": [
+      {
+        "tenant": "Pappa Geno's Steak & Cheese",
+        "accuracy": 58.0
+      },
+      {
+        "tenant": "AT&T",
+        "accuracy": 69.0
+      },
+      {
+        "tenant": "Pappa Geno's Steak & Cheese",
+        "accuracy": 58.0
+      },
+      {
+        "tenant": "7 Spice",
+        "accuracy": 38.0
+      }
+    ]
+  },
+  {
+    "run_id": "20260208_230438",
+    "label": "comparison_fix",
+    "timestamp": "2026-02-08T23:04:38.151372",
+    "leases_tested": 2,
+    "leases_errored": 0,
+    "average_accuracy": 70.83333333333333,
+    "total_cost": 0.9874,
+    "total_time": 159.6,
+    "field_accuracy": {
+      "tenant_legal_name": 100.0,
+      "tenant_sq_feet": 100.0,
+      "lease_expiration": 50.0,
+      "rent_commencement": 0.0,
+      "term_months": 50.0,
+      "base_rent_monthly": 100.0,
+      "base_rent_annual": 100.0,
+      "rent_per_sf_annual": 100.0,
+      "security_deposit": 100.0,
+      "permitted_use": 50.0,
+      "exclusives": 100.0,
+      "renewal_options": 0.0
+    },
+    "per_lease": [
+      {
+        "tenant": "BB's Tex-Orleans",
+        "accuracy": 75.0,
+        "error": null
+      },
+      {
+        "tenant": "Pappa Geno's Steak & Cheese",
+        "accuracy": 66.66666666666666,
+        "error": null
+      }
+    ]
+  },
+  {
+    "run_id": "20260208_235022",
+    "label": "comparison_fix_v2",
+    "timestamp": "2026-02-08T23:50:22.111333",
+    "leases_tested": 2,
+    "leases_errored": 0,
+    "average_accuracy": 87.5,
+    "total_cost": 0.9892,
+    "total_time": 167.5,
+    "field_accuracy": {
+      "tenant_legal_name": 100.0,
+      "tenant_sq_feet": 100.0,
+      "lease_expiration": 50.0,
+      "rent_commencement": 50.0,
+      "term_months": 100.0,
+      "base_rent_monthly": 100.0,
+      "base_rent_annual": 100.0,
+      "rent_per_sf_annual": 100.0,
+      "security_deposit": 100.0,
+      "permitted_use": 50.0,
+      "exclusives": 100.0,
+      "renewal_options": 100.0
+    },
+    "per_lease": [
+      {
+        "tenant": "BB's Tex-Orleans",
+        "accuracy": 100.0,
+        "error": null
+      },
+      {
+        "tenant": "Pappa Geno's Steak & Cheese",
+        "accuracy": 75.0,
+        "error": null
+      }
+    ]
+  },
+  {
+    "run_id": "20260209_003414",
+    "label": "comparison_fix_4lease",
+    "timestamp": "2026-02-09T00:34:14.449330",
+    "leases_tested": 4,
+    "leases_errored": 0,
+    "average_accuracy": 70.13888888888889,
+    "total_cost": 2.2214,
+    "total_time": 1536.2,
+    "field_accuracy": {
+      "tenant_legal_name": 100.0,
+      "tenant_sq_feet": 100.0,
+      "lease_expiration": 25.0,
+      "rent_commencement": 0.0,
+      "term_months": 100.0,
+      "base_rent_monthly": 100.0,
+      "base_rent_annual": 100.0,
+      "rent_per_sf_annual": 75.0,
+      "security_deposit": 75.0,
+      "permitted_use": 75.0,
+      "exclusives": 100.0,
+      "renewal_options": 33.3,
+      "premise_address": 50.0,
+      "lease_commencement": 0.0,
+      "execution_date": 100.0,
+      "lease_type": 100.0,
+      "pro_rata_share": 0.0,
+      "ti_total": 0.0
+    },
+    "per_lease": [
+      {
+        "tenant": "BB's Tex-Orleans",
+        "accuracy": 91.66666666666666,
+        "error": null
+      },
+      {
+        "tenant": "Pappa Geno's Steak & Cheese",
+        "accuracy": 66.66666666666666,
+        "error": null
+      },
+      {
+        "tenant": "7 Spice",
+        "accuracy": 66.66666666666666,
+        "error": null
+      },
+      {
+        "tenant": "AT&T",
+        "accuracy": 55.55555555555556,
+        "error": null
+      }
+    ]
+  }
+]

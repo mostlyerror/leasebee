@@ -1,0 +1,370 @@
+{
+  "summary": {
+    "run_id": "20260208_235022",
+    "label": "comparison_fix_v2",
+    "timestamp": "2026-02-08T23:50:22.111333",
+    "leases_tested": 2,
+    "leases_errored": 0,
+    "average_accuracy": 87.5,
+    "total_cost": 0.9892,
+    "total_time": 167.5,
+    "field_accuracy": {
+      "tenant_legal_name": 100.0,
+      "tenant_sq_feet": 100.0,
+      "lease_expiration": 50.0,
+      "rent_commencement": 50.0,
+      "term_months": 100.0,
+      "base_rent_monthly": 100.0,
+      "base_rent_annual": 100.0,
+      "rent_per_sf_annual": 100.0,
+      "security_deposit": 100.0,
+      "permitted_use": 50.0,
+      "exclusives": 100.0,
+      "renewal_options": 100.0
+    },
+    "per_lease": [
+      {
+        "tenant": "BB's Tex-Orleans",
+        "accuracy": 100.0,
+        "error": null
+      },
+      {
+        "tenant": "Pappa Geno's Steak & Cheese",
+        "accuracy": 75.0,
+        "error": null
+      }
+    ]
+  },
+  "details": [
+    {
+      "tenant": "BB's Tex-Orleans",
+      "lease_file": "BBTO Lease 10-6-2021 - FINAL - signed.pdf",
+      "accuracy": 100.0,
+      "cost": 0.5324,
+      "time": 92.56455993652344,
+      "extraction": {
+        "basic_info.lease_type": "Retail",
+        "basic_info.execution_date": "2021-10-08",
+        "parties.landlord_name": "LMSTHW, LLC",
+        "parties.landlord_address": "c/o LMSTHWLLC, 300 Promenade Way, Suite #200, Sugar Land, TX 77478",
+        "parties.tenant_name": "BB's Tex-Orleans Montrose, LLC",
+        "parties.tenant_address": "1302 Waugh Dr. #632, Houston TX 77019",
+        "property.address": "515 Westheimer Road, Houston, TX 77006",
+        "property.suite_unit": null,
+        "property.rentable_area": "3544",
+        "property.usable_area": null,
+        "dates.commencement_date": "2022-01-01",
+        "dates.expiration_date": "2032-06-30",
+        "dates.rent_commencement_date": "2022-01-01",
+        "dates.lease_term_months": "126",
+        "rent.base_rent_monthly": "11813.33",
+        "rent.base_rent_annual": "141759.96",
+        "rent.rent_per_sf_annual": "40.00",
+        "rent.rent_escalations": "Month 1-8: $40.00/sf/yr; Month 9-36: $46.00/sf/yr; Month 37-48: $46.92/sf/yr; Month 49-60: $47.86/sf/yr; Month 61-72: $48.82/sf/yr; Month 73-84: $49.80/sf/yr; Month 85-96: $50.80/sf/yr; Month 97-108: $51.82/sf/yr; Month 109-120: $52.86/sf/yr; Month 121-126: $53.92/sf/yr",
+        "rent.free_rent_months": null,
+        "operating_expenses.structure_type": "NNN",
+        "operating_expenses.base_year": null,
+        "operating_expenses.tenant_share_percentage": null,
+        "financial.security_deposit": "19924.37",
+        "financial.tenant_improvement_allowance": "176450.00",
+        "rights.renewal_options": "No options to renew. Renewal to be negotiated within the first 48 months of the Lease term.",
+        "rights.termination_rights": "Tenant may terminate if adequate parking cannot be secured for outdoor patio construction after both parties apply best efforts within 45 days",
+        "rights.expansion_rights": null,
+        "use.permitted_use": "The operation of a restaurant, offering for sale, selling and serving Cajun style food/cuisine including beverages and alcoholic beverages",
+        "use.exclusive_use": "Landlord shall not knowingly permit retail sales of Cajun style food within the Shopping Center to any other tenant and shall require any new leases to food services businesses to prohibit tenants from offering for sale Cajun-style food and beverages",
+        "maintenance.landlord_responsibilities": "Foundation, water and sewer lines that lead to and from the Demised Premises, structural elements of all exterior walls, roof, defects in water main lines and sewer main lines that are defective or cause disruptions to Tenant's business",
+        "maintenance.tenant_responsibilities": "All interior repairs and replacements, plate glass, windows, doors, exterior openings, window and door frames, molding, closure devices, locks, hardware, special store fronts, lighting, heating, air-conditioning, plumbing, electrical, mechanical and electromotive installations, equipment and fixtures, signs, placards, decorations, interior painting, store fixtures, furnishings, display window enclosures, plumbing fixtures, drop ceiling, insulation, floor covering, telephone equipment, HVAC including roof penetrations, all ducts, conduits, pipes, wiring, sewer stoppage, pest control, security, repairs occasioned by act or negligence of Tenant",
+        "insurance.tenant_insurance_requirements": "Property insurance (special form/all-risk coverage) with mold and terrorism coverage for leasehold improvements and business personal property at full replacement cost with no deductible exceeding $10,000; commercial general liability insurance of $2,000,000 per occurrence including environmental and dramshop coverage; worker's compensation insurance with employer's liability of $2,000,000; all policies from companies rated A/VIII or better; Landlord and property manager as additional insureds",
+        "other.parking_spaces": null,
+        "other.parking_cost": null
+      },
+      "confidence": {
+        "basic_info.lease_type": 0.98,
+        "basic_info.execution_date": 0.99,
+        "parties.landlord_name": 0.99,
+        "parties.landlord_address": 0.95,
+        "parties.tenant_name": 0.99,
+        "parties.tenant_address": 0.95,
+        "property.address": 0.98,
+        "property.suite_unit": 0.9,
+        "property.rentable_area": 0.98,
+        "property.usable_area": 0.0,
+        "dates.commencement_date": 0.9,
+        "dates.expiration_date": 0.88,
+        "dates.rent_commencement_date": 0.9,
+        "dates.lease_term_months": 0.99,
+        "rent.base_rent_monthly": 0.98,
+        "rent.base_rent_annual": 0.95,
+        "rent.rent_per_sf_annual": 0.98,
+        "rent.rent_escalations": 0.96,
+        "rent.free_rent_months": 0.0,
+        "operating_expenses.structure_type": 0.95,
+        "operating_expenses.base_year": 0.0,
+        "operating_expenses.tenant_share_percentage": 0.0,
+        "financial.security_deposit": 0.98,
+        "financial.tenant_improvement_allowance": 0.96,
+        "rights.renewal_options": 0.98,
+        "rights.termination_rights": 0.92,
+        "rights.expansion_rights": 0.0,
+        "use.permitted_use": 0.97,
+        "use.exclusive_use": 0.95,
+        "maintenance.landlord_responsibilities": 0.94,
+        "maintenance.tenant_responsibilities": 0.93,
+        "insurance.tenant_insurance_requirements": 0.95,
+        "other.parking_spaces": 0.0,
+        "other.parking_cost": 0.0
+      },
+      "field_results": {
+        "tenant_legal_name": {
+          "match": true,
+          "detail": "exact_text_match",
+          "gold": "BB's Tex-Orleans Montrose, LLC",
+          "extracted": "BB's Tex-Orleans Montrose, LLC",
+          "confidence": 0.99
+        },
+        "tenant_sq_feet": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "3544",
+          "extracted": "3544",
+          "confidence": 0.98
+        },
+        "lease_expiration": {
+          "match": true,
+          "detail": "exact_date_match",
+          "gold": "2032-06-30",
+          "extracted": "2032-06-30",
+          "confidence": 0.88
+        },
+        "rent_commencement": {
+          "match": true,
+          "detail": "exact_date_match",
+          "gold": "2022-01-01",
+          "extracted": "2022-01-01",
+          "confidence": 0.9
+        },
+        "term_months": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "10 years and 6 months",
+          "extracted": "126",
+          "confidence": 0.99
+        },
+        "base_rent_monthly": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "11813.33",
+          "extracted": "11813.33",
+          "confidence": 0.98
+        },
+        "base_rent_annual": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "141759.96",
+          "extracted": "141759.96",
+          "confidence": 0.95
+        },
+        "rent_per_sf_annual": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "39.99998871331828",
+          "extracted": "40.00",
+          "confidence": 0.98
+        },
+        "security_deposit": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "19924.370000000003",
+          "extracted": "19924.37",
+          "confidence": 0.98
+        },
+        "permitted_use": {
+          "match": true,
+          "detail": "text_contains",
+          "gold": "Premises shall be used only for the operation of a restaurant, offering for sale, selling and serving Cajun style food/cuisine including beverages and alcoholic beverages.",
+          "extracted": "The operation of a restaurant, offering for sale, selling and serving Cajun style food/cuisine including beverages and alcoholic beverages",
+          "confidence": 0.97
+        },
+        "exclusives": {
+          "match": true,
+          "detail": "word_overlap (83%)",
+          "gold": "Landlord shall not lease any space in the shopping center to any other tenant for the sale of Cajun-style food and beverages.",
+          "extracted": "Landlord shall not knowingly permit retail sales of Cajun style food within the Shopping Center to any other tenant and shall require any new leases to food services businesses to prohibit tenants from offering for sale Cajun-style food and beverages",
+          "confidence": 0.95
+        },
+        "renewal_options": {
+          "match": true,
+          "detail": "both_none_semantic",
+          "gold": "None.",
+          "extracted": "No options to renew. Renewal to be negotiated within the first 48 months of the Lease term.",
+          "confidence": 0.98
+        }
+      }
+    },
+    {
+      "tenant": "Pappa Geno's Steak & Cheese",
+      "lease_file": "322.PappaGenos.Lease.pdf",
+      "accuracy": 75.0,
+      "cost": 0.4568,
+      "time": 74.9538197517395,
+      "extraction": {
+        "basic_info.lease_type": "Retail",
+        "basic_info.execution_date": "2017-10-31",
+        "parties.landlord_name": "LMSTHW, LLC",
+        "parties.landlord_address": "3281 Rocky Creek Drive, Suite 100, Missouri City, Texas 77459",
+        "parties.tenant_name": "Paul Miller",
+        "parties.tenant_address": "1723 Salford Dr., Houston TX 77008",
+        "property.address": "515 Westheimer Road, Suite F, Houston, TX 77006",
+        "property.suite_unit": "Suite F",
+        "property.rentable_area": "1400",
+        "property.usable_area": null,
+        "dates.commencement_date": null,
+        "dates.expiration_date": null,
+        "dates.rent_commencement_date": null,
+        "dates.lease_term_months": "60",
+        "rent.base_rent_monthly": "4900.00",
+        "rent.base_rent_annual": "58800.00",
+        "rent.rent_per_sf_annual": "42.00",
+        "rent.rent_escalations": null,
+        "rent.free_rent_months": null,
+        "operating_expenses.structure_type": "NNN",
+        "operating_expenses.base_year": null,
+        "operating_expenses.tenant_share_percentage": "0.1046",
+        "financial.security_deposit": "4900.00",
+        "financial.tenant_improvement_allowance": "16800.00",
+        "rights.renewal_options": "One 60-month option with notice required not less than 180 days prior to expiration of Primary Term",
+        "rights.termination_rights": null,
+        "rights.expansion_rights": null,
+        "use.permitted_use": "Fast casual cheese steak restaurant",
+        "use.exclusive_use": null,
+        "maintenance.landlord_responsibilities": "Foundation, exterior walls (except store front, windows, plate glass, doors, door closure devices, window and door frames, moldings, locks, hardware and painting), and roof of the Building. However, Landlord not required to make repairs occasioned by act, omission or negligence of Tenant or its Permitees",
+        "maintenance.tenant_responsibilities": "Premises and all portions thereof, neat, clean, in good order and condition (ordinary wear and tear excepted); all doors and doorways; all direct utility connections; replacement of cracked or broken glass; HVAC system; sprinkler system; portion of sewer system exclusively serving Premises; portion of water and electrical facilities downstream of meters including meters",
+        "insurance.tenant_insurance_requirements": "Commercial general liability insurance of occurrence type with limits not less than $1,000,000 per occurrence and $2,000,000 general aggregate; Umbrella liability $1,000,000; Workers compensation as required by law; Business personal property insurance for full replacement cost",
+        "other.parking_spaces": null,
+        "other.parking_cost": null
+      },
+      "confidence": {
+        "basic_info.lease_type": 0.98,
+        "basic_info.execution_date": 0.95,
+        "parties.landlord_name": 0.99,
+        "parties.landlord_address": 0.98,
+        "parties.tenant_name": 0.99,
+        "parties.tenant_address": 0.98,
+        "property.address": 0.99,
+        "property.suite_unit": 0.98,
+        "property.rentable_area": 0.95,
+        "property.usable_area": 0.0,
+        "dates.commencement_date": 0.0,
+        "dates.expiration_date": 0.0,
+        "dates.rent_commencement_date": 0.0,
+        "dates.lease_term_months": 0.99,
+        "rent.base_rent_monthly": 0.99,
+        "rent.base_rent_annual": 0.98,
+        "rent.rent_per_sf_annual": 0.99,
+        "rent.rent_escalations": 0.0,
+        "rent.free_rent_months": 0.0,
+        "operating_expenses.structure_type": 0.92,
+        "operating_expenses.base_year": 0.0,
+        "operating_expenses.tenant_share_percentage": 0.99,
+        "financial.security_deposit": 0.99,
+        "financial.tenant_improvement_allowance": 0.97,
+        "rights.renewal_options": 0.94,
+        "rights.termination_rights": 0.0,
+        "rights.expansion_rights": 0.0,
+        "use.permitted_use": 0.98,
+        "use.exclusive_use": 0.0,
+        "maintenance.landlord_responsibilities": 0.95,
+        "maintenance.tenant_responsibilities": 0.94,
+        "insurance.tenant_insurance_requirements": 0.96,
+        "other.parking_spaces": 0.0,
+        "other.parking_cost": 0.0
+      },
+      "field_results": {
+        "tenant_legal_name": {
+          "match": true,
+          "detail": "exact_text_match",
+          "gold": "Paul Miller",
+          "extracted": "Paul Miller",
+          "confidence": 0.99
+        },
+        "tenant_sq_feet": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "1400",
+          "extracted": "1400",
+          "confidence": 0.95
+        },
+        "lease_expiration": {
+          "match": false,
+          "detail": "extracted_null",
+          "gold": "2023-02-28",
+          "extracted": null,
+          "confidence": 0.0
+        },
+        "rent_commencement": {
+          "match": false,
+          "detail": "extracted_null",
+          "gold": "2018-03-01",
+          "extracted": null,
+          "confidence": 0.0
+        },
+        "term_months": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "5 years",
+          "extracted": "60",
+          "confidence": 0.99
+        },
+        "base_rent_monthly": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "4900",
+          "extracted": "4900.00",
+          "confidence": 0.99
+        },
+        "base_rent_annual": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "58800",
+          "extracted": "58800.00",
+          "confidence": 0.98
+        },
+        "rent_per_sf_annual": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "42",
+          "extracted": "42.00",
+          "confidence": 0.99
+        },
+        "security_deposit": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "4900",
+          "extracted": "4900.00",
+          "confidence": 0.99
+        },
+        "permitted_use": {
+          "match": false,
+          "detail": "text_mismatch",
+          "gold": "Premises shall be used only for the operation of a fast-casual cheese steak restaurant.",
+          "extracted": "Fast casual cheese steak restaurant",
+          "confidence": 0.98
+        },
+        "exclusives": {
+          "match": true,
+          "detail": "both_null",
+          "gold": "N/A",
+          "extracted": null,
+          "confidence": 0.0
+        },
+        "renewal_options": {
+          "match": true,
+          "detail": "word_overlap (47%)",
+          "gold": "1, 5-year renewal option remaining. Tenant shall provide written notice of at least 180 days prior to the expiration of the term.",
+          "extracted": "One 60-month option with notice required not less than 180 days prior to expiration of Primary Term",
+          "confidence": 0.94
+        }
+      }
+    }
+  ]
+}

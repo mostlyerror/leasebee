@@ -1,0 +1,779 @@
+{
+  "summary": {
+    "run_id": "20260209_003414",
+    "label": "comparison_fix_4lease",
+    "timestamp": "2026-02-09T00:34:14.449330",
+    "leases_tested": 4,
+    "leases_errored": 0,
+    "average_accuracy": 70.13888888888889,
+    "total_cost": 2.2214,
+    "total_time": 1536.2,
+    "field_accuracy": {
+      "tenant_legal_name": 100.0,
+      "tenant_sq_feet": 100.0,
+      "lease_expiration": 25.0,
+      "rent_commencement": 0.0,
+      "term_months": 100.0,
+      "base_rent_monthly": 100.0,
+      "base_rent_annual": 100.0,
+      "rent_per_sf_annual": 75.0,
+      "security_deposit": 75.0,
+      "permitted_use": 75.0,
+      "exclusives": 100.0,
+      "renewal_options": 33.3,
+      "premise_address": 50.0,
+      "lease_commencement": 0.0,
+      "execution_date": 100.0,
+      "lease_type": 100.0,
+      "pro_rata_share": 0.0,
+      "ti_total": 0.0
+    },
+    "per_lease": [
+      {
+        "tenant": "BB's Tex-Orleans",
+        "accuracy": 91.66666666666666,
+        "error": null
+      },
+      {
+        "tenant": "Pappa Geno's Steak & Cheese",
+        "accuracy": 66.66666666666666,
+        "error": null
+      },
+      {
+        "tenant": "7 Spice",
+        "accuracy": 66.66666666666666,
+        "error": null
+      },
+      {
+        "tenant": "AT&T",
+        "accuracy": 55.55555555555556,
+        "error": null
+      }
+    ]
+  },
+  "details": [
+    {
+      "tenant": "BB's Tex-Orleans",
+      "lease_file": "BBTO Lease 10-6-2021 - FINAL - signed.pdf",
+      "accuracy": 91.66666666666666,
+      "cost": 0.5362,
+      "time": 98.5256597995758,
+      "extraction": {
+        "basic_info.lease_type": "Retail",
+        "basic_info.execution_date": "2021-10-08",
+        "parties.landlord_name": "LMSTHW, LLC",
+        "parties.landlord_address": "c/o LMSTHW LLC, 300 Promenade Way, Suite #200, Sugar Land, TX 77478",
+        "parties.tenant_name": "BB's Tex-Orleans Montrose, LLC",
+        "parties.tenant_address": "1302 Waugh Dr. #632, Houston TX 77019",
+        "property.address": "515 Westheimer Road, Houston, TX 77006",
+        "property.suite_unit": null,
+        "property.rentable_area": "3544",
+        "property.usable_area": null,
+        "dates.commencement_date": "2022-01-01",
+        "dates.expiration_date": "2032-06-30",
+        "dates.rent_commencement_date": "2022-02-01",
+        "dates.lease_term_months": "126",
+        "rent.base_rent_monthly": "11813.33",
+        "rent.base_rent_annual": "141759.96",
+        "rent.rent_per_sf_annual": "40.00",
+        "rent.rent_escalations": "Monthly rent increases through the lease term: Months 1-8: $11,813.33/month ($40.00/sf/yr), Months 9-36: $13,585.33/month ($46.00/sf/yr), Months 37-48: $13,857.04/month ($46.92/sf/yr), Months 49-60: $14,134.18/month ($47.86/sf/yr), Months 61-72: $14,417.35/month ($48.82/sf/yr), Months 73-84: $14,707.60/month ($49.80/sf/yr), Months 85-96: $14,707.60/month ($50.80/sf/yr), Months 97-108: $15,304.17/month ($51.82/sf/yr), Months 109-120: $15,611.32/month ($52.86/sf/yr), Months 121-126: $15,924.37/month ($53.92/sf/yr)",
+        "rent.free_rent_months": "0",
+        "operating_expenses.structure_type": "NNN",
+        "operating_expenses.base_year": null,
+        "operating_expenses.tenant_share_percentage": null,
+        "financial.security_deposit": "19924.37",
+        "financial.tenant_improvement_allowance": "176450.00",
+        "rights.renewal_options": "No options to renew. Renewal to be negotiated within the first 48 months of the Lease term",
+        "rights.termination_rights": "Tenant may terminate if unable to secure required parking after applying best efforts and if Landlord cannot locate such parking within 45 days",
+        "rights.expansion_rights": null,
+        "use.permitted_use": "The operation of a restaurant, offering for sale, selling and serving Cajun style food/cuisine including beverages and alcoholic beverages",
+        "use.exclusive_use": "Landlord shall not knowingly permit retail sales of Cajun style food within the Shopping Center to any other tenant and shall require any new leases to food services businesses in the Shopping Center to prohibit tenants from offering for sale Cajun-style food and beverages",
+        "maintenance.landlord_responsibilities": "Foundation, water and sewer lines leading to/from the Demised Premises, structural elements of exterior walls (excluding plate glass, windows, doors, frames, molding, closure devices, locks, hardware, store fronts, lighting, HVAC, plumbing, electrical equipment, signs, interior painting), roof (subject to Common Area charges)",
+        "maintenance.tenant_responsibilities": "All items excluded from Landlord's responsibility including: plate glass; windows, doors and exterior openings; window and door frames, molding, closure devices, locks and hardware; special store fronts; lighting, heating, air-conditioning, plumbing and electrical equipment within or serving Premises; signs, placards, decorations; interior painting; all repairs and replacements except those required by Landlord; replacement of cracked or broken glass; HVAC maintenance and repair; fire-protection sprinkler systems; plumbing; kitchen exhaust systems; grease traps; roof grease protection systems; sewer stoppages in, under and above Premises",
+        "insurance.tenant_insurance_requirements": "Property insurance (special form/all-risk) covering leasehold improvements and business personal property at full replacement cost with minimum $10,000 deductible, business income coverage at 75% of estimated gross annual income; Commercial general liability insurance with $2,000,000 per occurrence limit including environmental and dramshop coverage if applicable; Worker's compensation with employer's liability of $2,000,000 minimum. All policies must name Landlord and property manager as additional insureds (except workers comp), be from A-rated Class VIII companies, and include 30-day cancellation notice",
+        "other.parking_spaces": null,
+        "other.parking_cost": null
+      },
+      "confidence": {
+        "basic_info.lease_type": 0.99,
+        "basic_info.execution_date": 0.99,
+        "parties.landlord_name": 0.99,
+        "parties.landlord_address": 0.98,
+        "parties.tenant_name": 0.99,
+        "parties.tenant_address": 0.98,
+        "property.address": 0.99,
+        "property.suite_unit": 0.95,
+        "property.rentable_area": 0.98,
+        "property.usable_area": 0.0,
+        "dates.commencement_date": 0.9,
+        "dates.expiration_date": 0.88,
+        "dates.rent_commencement_date": 0.85,
+        "dates.lease_term_months": 0.99,
+        "rent.base_rent_monthly": 0.98,
+        "rent.base_rent_annual": 0.97,
+        "rent.rent_per_sf_annual": 0.98,
+        "rent.rent_escalations": 0.98,
+        "rent.free_rent_months": 0.95,
+        "operating_expenses.structure_type": 0.95,
+        "operating_expenses.base_year": 0.0,
+        "operating_expenses.tenant_share_percentage": 0.0,
+        "financial.security_deposit": 0.99,
+        "financial.tenant_improvement_allowance": 0.97,
+        "rights.renewal_options": 0.98,
+        "rights.termination_rights": 0.92,
+        "rights.expansion_rights": 0.0,
+        "use.permitted_use": 0.98,
+        "use.exclusive_use": 0.96,
+        "maintenance.landlord_responsibilities": 0.94,
+        "maintenance.tenant_responsibilities": 0.94,
+        "insurance.tenant_insurance_requirements": 0.96,
+        "other.parking_spaces": 0.0,
+        "other.parking_cost": 0.0
+      },
+      "field_results": {
+        "tenant_legal_name": {
+          "match": true,
+          "detail": "exact_text_match",
+          "gold": "BB's Tex-Orleans Montrose, LLC",
+          "extracted": "BB's Tex-Orleans Montrose, LLC",
+          "confidence": 0.99
+        },
+        "tenant_sq_feet": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "3544",
+          "extracted": "3544",
+          "confidence": 0.98
+        },
+        "lease_expiration": {
+          "match": true,
+          "detail": "exact_date_match",
+          "gold": "2032-06-30",
+          "extracted": "2032-06-30",
+          "confidence": 0.88
+        },
+        "rent_commencement": {
+          "match": false,
+          "detail": "date_mismatch: gold=2022-01-01 ext=2022-02-01",
+          "gold": "2022-01-01",
+          "extracted": "2022-02-01",
+          "confidence": 0.85
+        },
+        "term_months": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "10 years and 6 months",
+          "extracted": "126",
+          "confidence": 0.99
+        },
+        "base_rent_monthly": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "11813.33",
+          "extracted": "11813.33",
+          "confidence": 0.98
+        },
+        "base_rent_annual": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "141759.96",
+          "extracted": "141759.96",
+          "confidence": 0.97
+        },
+        "rent_per_sf_annual": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "39.99998871331828",
+          "extracted": "40.00",
+          "confidence": 0.98
+        },
+        "security_deposit": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "19924.370000000003",
+          "extracted": "19924.37",
+          "confidence": 0.99
+        },
+        "permitted_use": {
+          "match": true,
+          "detail": "text_contains",
+          "gold": "Premises shall be used only for the operation of a restaurant, offering for sale, selling and serving Cajun style food/cuisine including beverages and alcoholic beverages.",
+          "extracted": "The operation of a restaurant, offering for sale, selling and serving Cajun style food/cuisine including beverages and alcoholic beverages",
+          "confidence": 0.98
+        },
+        "exclusives": {
+          "match": true,
+          "detail": "word_overlap (83%)",
+          "gold": "Landlord shall not lease any space in the shopping center to any other tenant for the sale of Cajun-style food and beverages.",
+          "extracted": "Landlord shall not knowingly permit retail sales of Cajun style food within the Shopping Center to any other tenant and shall require any new leases to food services businesses in the Shopping Center to prohibit tenants from offering for sale Cajun-style food and beverages",
+          "confidence": 0.96
+        },
+        "renewal_options": {
+          "match": true,
+          "detail": "both_none_semantic",
+          "gold": "None.",
+          "extracted": "No options to renew. Renewal to be negotiated within the first 48 months of the Lease term",
+          "confidence": 0.98
+        }
+      }
+    },
+    {
+      "tenant": "Pappa Geno's Steak & Cheese",
+      "lease_file": "322.PappaGenos.Lease.pdf",
+      "accuracy": 66.66666666666666,
+      "cost": 0.4528,
+      "time": 670.7655658721924,
+      "extraction": {
+        "basic_info.lease_type": "Retail",
+        "basic_info.execution_date": "2017-10-31",
+        "parties.landlord_name": "LMSTHW, LLC",
+        "parties.landlord_address": "3281 Rocky Creek Drive, Suite 100, Missouri City, Texas 77459",
+        "parties.tenant_name": "Paul Miller",
+        "parties.tenant_address": "1723 Salford Dr., Houston TX 77008",
+        "property.address": "515 Westheimer Road, Suite F, Houston, TX 77006",
+        "property.suite_unit": "Suite F",
+        "property.rentable_area": "1400",
+        "property.usable_area": null,
+        "dates.commencement_date": null,
+        "dates.expiration_date": null,
+        "dates.rent_commencement_date": null,
+        "dates.lease_term_months": "60",
+        "rent.base_rent_monthly": "4900.00",
+        "rent.base_rent_annual": "58800.00",
+        "rent.rent_per_sf_annual": "42.00",
+        "rent.rent_escalations": null,
+        "rent.free_rent_months": null,
+        "operating_expenses.structure_type": "Modified Gross",
+        "operating_expenses.base_year": null,
+        "operating_expenses.tenant_share_percentage": "0.1046",
+        "financial.security_deposit": "4900.00",
+        "financial.tenant_improvement_allowance": "16800.00",
+        "rights.renewal_options": "One 60-month option with 180 days advance notice, market rate but not less than 110% of the Minimum Rent during the last year of the initial Lease Term",
+        "rights.termination_rights": null,
+        "rights.expansion_rights": null,
+        "use.permitted_use": "Fast casual cheese steak restaurant",
+        "use.exclusive_use": null,
+        "maintenance.landlord_responsibilities": "Foundation, exterior walls (except store front, windows, plate glass, doors, door closure devices, window and door frames, moldings, locks, hardware and painting), roof",
+        "maintenance.tenant_responsibilities": "All portions of Premises except foundation, exterior walls, and roof; store front, windows, plate glass, doors, door closure devices, window and door frames, moldings, locks, hardware, painting, HVAC system, sprinkler system, sewer system (portion serving Premises), water and electrical facilities downstream of meters, all doors and doorways, direct utility connections, cracked or broken glass",
+        "insurance.tenant_insurance_requirements": "Commercial general liability insurance of $1,000,000 per occurrence and $2,000,000 general aggregate; umbrella liability $1,000,000; worker's compensation; business personal property insurance for full replacement cost including betterments and improvements",
+        "other.parking_spaces": null,
+        "other.parking_cost": null
+      },
+      "confidence": {
+        "basic_info.lease_type": 0.99,
+        "basic_info.execution_date": 0.98,
+        "parties.landlord_name": 0.99,
+        "parties.landlord_address": 0.98,
+        "parties.tenant_name": 0.99,
+        "parties.tenant_address": 0.98,
+        "property.address": 0.99,
+        "property.suite_unit": 0.99,
+        "property.rentable_area": 0.95,
+        "property.usable_area": 0.0,
+        "dates.commencement_date": 0.0,
+        "dates.expiration_date": 0.0,
+        "dates.rent_commencement_date": 0.0,
+        "dates.lease_term_months": 0.99,
+        "rent.base_rent_monthly": 0.99,
+        "rent.base_rent_annual": 0.95,
+        "rent.rent_per_sf_annual": 0.99,
+        "rent.rent_escalations": 0.0,
+        "rent.free_rent_months": 0.0,
+        "operating_expenses.structure_type": 0.9,
+        "operating_expenses.base_year": 0.0,
+        "operating_expenses.tenant_share_percentage": 0.99,
+        "financial.security_deposit": 0.99,
+        "financial.tenant_improvement_allowance": 0.97,
+        "rights.renewal_options": 0.95,
+        "rights.termination_rights": 0.0,
+        "rights.expansion_rights": 0.0,
+        "use.permitted_use": 0.99,
+        "use.exclusive_use": 0.0,
+        "maintenance.landlord_responsibilities": 0.94,
+        "maintenance.tenant_responsibilities": 0.94,
+        "insurance.tenant_insurance_requirements": 0.96,
+        "other.parking_spaces": 0.0,
+        "other.parking_cost": 0.0
+      },
+      "field_results": {
+        "tenant_legal_name": {
+          "match": true,
+          "detail": "exact_text_match",
+          "gold": "Paul Miller",
+          "extracted": "Paul Miller",
+          "confidence": 0.99
+        },
+        "tenant_sq_feet": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "1400",
+          "extracted": "1400",
+          "confidence": 0.95
+        },
+        "lease_expiration": {
+          "match": false,
+          "detail": "extracted_null",
+          "gold": "2023-02-28",
+          "extracted": null,
+          "confidence": 0.0
+        },
+        "rent_commencement": {
+          "match": false,
+          "detail": "extracted_null",
+          "gold": "2018-03-01",
+          "extracted": null,
+          "confidence": 0.0
+        },
+        "term_months": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "5 years",
+          "extracted": "60",
+          "confidence": 0.99
+        },
+        "base_rent_monthly": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "4900",
+          "extracted": "4900.00",
+          "confidence": 0.99
+        },
+        "base_rent_annual": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "58800",
+          "extracted": "58800.00",
+          "confidence": 0.95
+        },
+        "rent_per_sf_annual": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "42",
+          "extracted": "42.00",
+          "confidence": 0.99
+        },
+        "security_deposit": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "4900",
+          "extracted": "4900.00",
+          "confidence": 0.99
+        },
+        "permitted_use": {
+          "match": false,
+          "detail": "text_mismatch",
+          "gold": "Premises shall be used only for the operation of a fast-casual cheese steak restaurant.",
+          "extracted": "Fast casual cheese steak restaurant",
+          "confidence": 0.99
+        },
+        "exclusives": {
+          "match": true,
+          "detail": "both_null",
+          "gold": "N/A",
+          "extracted": null,
+          "confidence": 0.0
+        },
+        "renewal_options": {
+          "match": false,
+          "detail": "text_mismatch",
+          "gold": "1, 5-year renewal option remaining. Tenant shall provide written notice of at least 180 days prior to the expiration of the term.",
+          "extracted": "One 60-month option with 180 days advance notice, market rate but not less than 110% of the Minimum Rent during the last year of the initial Lease Term",
+          "confidence": 0.95
+        }
+      }
+    },
+    {
+      "tenant": "7 Spice",
+      "lease_file": "Fully Executed Lease - 7 Spice.pdf",
+      "accuracy": 66.66666666666666,
+      "cost": 0.5748,
+      "time": 70.88307905197144,
+      "extraction": {
+        "basic_info.lease_type": "Retail",
+        "basic_info.execution_date": "2022-02-23",
+        "parties.landlord_name": "249 MARKETPLACE SIX LLC",
+        "parties.landlord_address": "10080 Bellaire Blvd., Suite 220, Houston, TX 77072",
+        "parties.tenant_name": "7 Spice",
+        "parties.tenant_address": "12647 Tomball Parkway Suite #100, Houston, Texas 77086",
+        "property.address": "12647 Tomball Parkway, Houston, Texas 77086",
+        "property.suite_unit": "Suite #100",
+        "property.rentable_area": "1664",
+        "property.usable_area": null,
+        "dates.commencement_date": null,
+        "dates.expiration_date": null,
+        "dates.rent_commencement_date": null,
+        "dates.lease_term_months": "60",
+        "rent.base_rent_monthly": "3774.00",
+        "rent.base_rent_annual": "44928.00",
+        "rent.rent_per_sf_annual": "27.00",
+        "rent.rent_escalations": null,
+        "rent.free_rent_months": null,
+        "operating_expenses.structure_type": "NNN",
+        "operating_expenses.base_year": null,
+        "operating_expenses.tenant_share_percentage": null,
+        "financial.security_deposit": null,
+        "financial.tenant_improvement_allowance": "20.82",
+        "rights.renewal_options": "Two 5-year options with 12 months advance notice",
+        "rights.termination_rights": null,
+        "rights.expansion_rights": null,
+        "use.permitted_use": "Solely for the continuous operation of a cajun seafood restaurant and for no other purpose whatsoever",
+        "use.exclusive_use": null,
+        "maintenance.landlord_responsibilities": "Roof, foundation and load-bearing walls supporting the roof. Common Areas of the Shopping Center.",
+        "maintenance.tenant_responsibilities": "All portions of the Leased Premises other than roof, foundation and load-bearing walls, including storefront, loading docks, interior partition walls, doors, windows, electrical wiring, equipment and fixtures, plumbing lines and fixtures, heating, ventilation and air conditioning equipment.",
+        "insurance.tenant_insurance_requirements": "Commercial General Liability: $1,000,000 per occurrence, $2,000,000 general aggregate; Workers Compensation: Statutory Limits; Employer's Liability: $1,000,000; Business Automobile Liability: $2,000,000; Property Insurance: 90% replacement cost; Business Income Coverage: 6 months minimum",
+        "other.parking_spaces": null,
+        "other.parking_cost": null
+      },
+      "confidence": {
+        "basic_info.lease_type": 0.98,
+        "basic_info.execution_date": 0.97,
+        "parties.landlord_name": 0.99,
+        "parties.landlord_address": 0.98,
+        "parties.tenant_name": 0.99,
+        "parties.tenant_address": 0.98,
+        "property.address": 0.98,
+        "property.suite_unit": 0.98,
+        "property.rentable_area": 0.95,
+        "property.usable_area": 0.0,
+        "dates.commencement_date": 0.0,
+        "dates.expiration_date": 0.0,
+        "dates.rent_commencement_date": 0.0,
+        "dates.lease_term_months": 0.95,
+        "rent.base_rent_monthly": 0.98,
+        "rent.base_rent_annual": 0.98,
+        "rent.rent_per_sf_annual": 0.98,
+        "rent.rent_escalations": 0.0,
+        "rent.free_rent_months": 0.0,
+        "operating_expenses.structure_type": 0.95,
+        "operating_expenses.base_year": 0.0,
+        "operating_expenses.tenant_share_percentage": 0.0,
+        "financial.security_deposit": 0.0,
+        "financial.tenant_improvement_allowance": 0.96,
+        "rights.renewal_options": 0.9,
+        "rights.termination_rights": 0.0,
+        "rights.expansion_rights": 0.0,
+        "use.permitted_use": 0.98,
+        "use.exclusive_use": 0.0,
+        "maintenance.landlord_responsibilities": 0.95,
+        "maintenance.tenant_responsibilities": 0.95,
+        "insurance.tenant_insurance_requirements": 0.96,
+        "other.parking_spaces": 0.0,
+        "other.parking_cost": 0.0
+      },
+      "field_results": {
+        "tenant_legal_name": {
+          "match": true,
+          "detail": "exact_text_match",
+          "gold": "7 Spice",
+          "extracted": "7 Spice",
+          "confidence": 0.99
+        },
+        "premise_address": {
+          "match": false,
+          "detail": "text_mismatch",
+          "gold": "12647 Tomball Pkwy Suite 100 Houston, TX 77086",
+          "extracted": "12647 Tomball Parkway, Houston, Texas 77086",
+          "confidence": 0.98
+        },
+        "tenant_sq_feet": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "1664",
+          "extracted": "1664",
+          "confidence": 0.95
+        },
+        "lease_commencement": {
+          "match": false,
+          "detail": "extracted_null",
+          "gold": "2022-10-13",
+          "extracted": null,
+          "confidence": 0.0
+        },
+        "lease_expiration": {
+          "match": false,
+          "detail": "extracted_null",
+          "gold": "2027-10-31",
+          "extracted": null,
+          "confidence": 0.0
+        },
+        "rent_commencement": {
+          "match": false,
+          "detail": "extracted_null",
+          "gold": "2023-10-21",
+          "extracted": null,
+          "confidence": 0.0
+        },
+        "term_months": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "60",
+          "extracted": "60",
+          "confidence": 0.95
+        },
+        "execution_date": {
+          "match": true,
+          "detail": "exact_date_match",
+          "gold": "2022-02-23",
+          "extracted": "2022-02-23",
+          "confidence": 0.97
+        },
+        "base_rent_monthly": {
+          "match": true,
+          "detail": "number_match (ratio=0.008)",
+          "gold": "3744",
+          "extracted": "3774.00",
+          "confidence": 0.98
+        },
+        "base_rent_annual": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "44928",
+          "extracted": "44928.00",
+          "confidence": 0.98
+        },
+        "rent_per_sf_annual": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "27",
+          "extracted": "27.00",
+          "confidence": 0.98
+        },
+        "security_deposit": {
+          "match": true,
+          "detail": "both_null",
+          "gold": "N/A",
+          "extracted": null,
+          "confidence": 0.0
+        },
+        "lease_type": {
+          "match": true,
+          "detail": "exact_text_match",
+          "gold": "NNN",
+          "extracted": "NNN",
+          "confidence": 0.95
+        },
+        "pro_rata_share": {
+          "match": false,
+          "detail": "extracted_null",
+          "gold": "0.08896017107725207",
+          "extracted": null,
+          "confidence": 0.0
+        },
+        "permitted_use": {
+          "match": true,
+          "detail": "text_contains",
+          "gold": "For the continuous operation of a cajun seafood restaurant",
+          "extracted": "Solely for the continuous operation of a cajun seafood restaurant and for no other purpose whatsoever",
+          "confidence": 0.98
+        }
+      }
+    },
+    {
+      "tenant": "AT&T",
+      "lease_file": "AT&T - Executed Lease Agreement - MP 249.pdf",
+      "accuracy": 55.55555555555556,
+      "cost": 0.6576,
+      "time": 696.0393259525299,
+      "extraction": {
+        "basic_info.lease_type": "Retail",
+        "basic_info.execution_date": "2025-05-14",
+        "parties.landlord_name": "LTD INVESTMENT CORPORATION, ADLA PROPERTIES, LLC, and NVCG, LLC",
+        "parties.landlord_address": "10080 Bellaire Blvd. Suite 220, Houston, TX 77072",
+        "parties.tenant_name": "MOBILY LLC",
+        "parties.tenant_address": "575 Julie Rivers Rd, Sugar Land, TX 77478",
+        "property.address": "12633 Tomball Parkway, Houston, Texas 77086",
+        "property.suite_unit": "Suite 200",
+        "property.rentable_area": "945",
+        "property.usable_area": null,
+        "dates.commencement_date": null,
+        "dates.expiration_date": null,
+        "dates.rent_commencement_date": null,
+        "dates.lease_term_months": "36",
+        "rent.base_rent_monthly": "3780.00",
+        "rent.base_rent_annual": "45360.00",
+        "rent.base_rent_per_sf_annual": "48.00",
+        "rent.rent_escalations": "Option Period 1: Greater of (a) prevailing market rental rates or (b) $3,780.00 ($48.00/SF/year x 945 sq. ft.) with periodic increases not exceeding 9% of previous rental rate. Option Period 2: Greater of (a) prevailing market rental rates or (b) Base Rent for last month during Option Period 1 with periodic increases not exceeding 9% of previous rental rate.",
+        "rent.free_rent_months": null,
+        "operating_expenses.structure_type": "NNN",
+        "operating_expenses.base_year": null,
+        "operating_expenses.tenant_share_percentage": null,
+        "financial.security_deposit": null,
+        "financial.tenant_improvement_allowance": null,
+        "rights.renewal_options": "Two 3-year options with notice required at least 180 days but not more than 270 days prior to the last day of the Term",
+        "rights.termination_rights": "Landlord may terminate if Leased Premises not delivered on or before 8 months from lease date (Second Delivery Deadline), with 10 days written notice. Tenant may terminate if more than 30% of Leased Premises or 25% of Shopping Center destroyed by casualty. Tenant may terminate if 20% or more of Leased Premises condemned.",
+        "rights.expansion_rights": null,
+        "use.permitted_use": "Sale of wireless communication products and services, local and long distance services and products, cable television products and services, satellite products and services, video entertainment products and services, Internet access products and services, mobile electronic devices and services, home or office automation and security products and services, and any other related products and services available from AT&T; installation, repair and servicing of such equipment; incidental storage of equipment; and any activities reasonably related to such permitted businesses",
+        "use.exclusive_use": "Landlord agrees not to lease space in the Shopping Center to any person or entity whose primary use is to offer sale of wireless communication products and services; excludes tenants whose revenues from such sales are ancillary (20% or less of gross sales)",
+        "maintenance.landlord_responsibilities": "Roof, foundation and load-bearing walls supporting the roof; Common Areas of the Shopping Center",
+        "maintenance.tenant_responsibilities": "All portions of the Leased Premises other than roof, foundation and load-bearing walls, including: storefront; loading docks; interior partition walls; doors; windows; electrical wiring, equipment and fixtures; plumbing lines and fixtures; heating, ventilation and air conditioning equipment; sidewalks and service ways adjacent to Leased Premises; keeping premises neat, clean, free from dirt and rubbish",
+        "insurance.tenant_insurance_requirements": "Worker's Compensation (Statutory Limits or $500,000); Employer's Liability ($1,000,000 each accident, $1,000,000 each employee); Commercial General Liability ($1,000,000 per occurrence, $2,000,000 general aggregate); Business Automobile Liability ($2,000,000 combined single limit); Causes of Loss-Special Form Property Insurance (90% replacement cost); Business Income and Extra Expense Coverage (no less than 6 months)",
+        "other.parking_spaces": null,
+        "other.parking_cost": null
+      },
+      "confidence": {
+        "basic_info.lease_type": 0.99,
+        "basic_info.execution_date": 0.98,
+        "parties.landlord_name": 0.99,
+        "parties.landlord_address": 0.97,
+        "parties.tenant_name": 0.99,
+        "parties.tenant_address": 0.97,
+        "property.address": 0.99,
+        "property.suite_unit": 0.99,
+        "property.rentable_area": 0.95,
+        "property.usable_area": 0.0,
+        "dates.commencement_date": 0.0,
+        "dates.expiration_date": 0.0,
+        "dates.rent_commencement_date": 0.0,
+        "dates.lease_term_months": 0.98,
+        "rent.base_rent_monthly": 0.99,
+        "rent.base_rent_annual": 0.99,
+        "rent.base_rent_per_sf_annual": 0.99,
+        "rent.rent_escalations": 0.92,
+        "rent.free_rent_months": 0.0,
+        "operating_expenses.structure_type": 0.92,
+        "operating_expenses.base_year": 0.0,
+        "operating_expenses.tenant_share_percentage": 0.0,
+        "financial.security_deposit": 0.0,
+        "financial.tenant_improvement_allowance": 0.0,
+        "rights.renewal_options": 0.96,
+        "rights.termination_rights": 0.9,
+        "rights.expansion_rights": 0.0,
+        "use.permitted_use": 0.95,
+        "use.exclusive_use": 0.93,
+        "maintenance.landlord_responsibilities": 0.94,
+        "maintenance.tenant_responsibilities": 0.94,
+        "insurance.tenant_insurance_requirements": 0.96,
+        "other.parking_spaces": 0.0,
+        "other.parking_cost": 0.0
+      },
+      "field_results": {
+        "tenant_legal_name": {
+          "match": true,
+          "detail": "exact_text_match",
+          "gold": "MOBILY LLC",
+          "extracted": "MOBILY LLC",
+          "confidence": 0.99
+        },
+        "premise_address": {
+          "match": true,
+          "detail": "word_overlap (62%)",
+          "gold": "12633 Tomball Parkway Suite 200 Houston, TX 77086",
+          "extracted": "12633 Tomball Parkway, Houston, Texas 77086",
+          "confidence": 0.99
+        },
+        "tenant_sq_feet": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "945",
+          "extracted": "945",
+          "confidence": 0.95
+        },
+        "lease_commencement": {
+          "match": false,
+          "detail": "extracted_null",
+          "gold": "2026-02-02",
+          "extracted": null,
+          "confidence": 0.0
+        },
+        "lease_expiration": {
+          "match": false,
+          "detail": "extracted_null",
+          "gold": "2029-02-28",
+          "extracted": null,
+          "confidence": 0.0
+        },
+        "rent_commencement": {
+          "match": false,
+          "detail": "extracted_null",
+          "gold": "2026-02-02",
+          "extracted": null,
+          "confidence": 0.0
+        },
+        "term_months": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "36",
+          "extracted": "36",
+          "confidence": 0.98
+        },
+        "execution_date": {
+          "match": true,
+          "detail": "exact_date_match",
+          "gold": "2025-05-14",
+          "extracted": "2025-05-14",
+          "confidence": 0.98
+        },
+        "base_rent_monthly": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "3780",
+          "extracted": "3780.00",
+          "confidence": 0.99
+        },
+        "base_rent_annual": {
+          "match": true,
+          "detail": "number_match (ratio=0.000)",
+          "gold": "45360",
+          "extracted": "45360.00",
+          "confidence": 0.99
+        },
+        "rent_per_sf_annual": {
+          "match": false,
+          "detail": "extracted_null",
+          "gold": "48",
+          "extracted": null,
+          "confidence": 0
+        },
+        "security_deposit": {
+          "match": false,
+          "detail": "extracted_null",
+          "gold": "0",
+          "extracted": null,
+          "confidence": 0.0
+        },
+        "ti_total": {
+          "match": false,
+          "detail": "extracted_null",
+          "gold": "0",
+          "extracted": null,
+          "confidence": 0.0
+        },
+        "lease_type": {
+          "match": true,
+          "detail": "exact_text_match",
+          "gold": "NNN",
+          "extracted": "NNN",
+          "confidence": 0.92
+        },
+        "pro_rata_share": {
+          "match": false,
+          "detail": "extracted_null",
+          "gold": "0.2825112107623318",
+          "extracted": null,
+          "confidence": 0.0
+        },
+        "permitted_use": {
+          "match": true,
+          "detail": "word_overlap (100%)",
+          "gold": "Sale of wireless communication products and services, local and long distance services and products.",
+          "extracted": "Sale of wireless communication products and services, local and long distance services and products, cable television products and services, satellite products and services, video entertainment products and services, Internet access products and services, mobile electronic devices and services, home or office automation and security products and services, and any other related products and services available from AT&T; installation, repair and servicing of such equipment; incidental storage of equipment; and any activities reasonably related to such permitted businesses",
+          "confidence": 0.95
+        },
+        "exclusives": {
+          "match": true,
+          "detail": "text_contains",
+          "gold": "sale of wireless communication",
+          "extracted": "Landlord agrees not to lease space in the Shopping Center to any person or entity whose primary use is to offer sale of wireless communication products and services; excludes tenants whose revenues from such sales are ancillary (20% or less of gross sales)",
+          "confidence": 0.93
+        },
+        "renewal_options": {
+          "match": false,
+          "detail": "text_mismatch",
+          "gold": "2 - 36 month terms at time of market rate.",
+          "extracted": "Two 3-year options with notice required at least 180 days but not more than 270 days prior to the last day of the Term",
+          "confidence": 0.96
+        }
+      }
+    }
+  ]
+}

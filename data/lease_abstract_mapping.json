@@ -1,0 +1,389 @@
+[
+  {
+    "abstract_file": "249 Pads - Jeremiah_s Ice.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Jeremiah's Italian Ice",
+    "tenant_legal": "JII 249 Market Place LLC",
+    "lease_file": "Jeremiah_s Ice - Executed Lease Agreement - Pad 2 -MP 249.pdf",
+    "match_confidence": 0.6666666666666666,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "515 Westheimer - Lease Abstracts.xlsx",
+    "abstract_sheet": "BB Donuts",
+    "tenant_dba": "BB Donuts",
+    "tenant_legal": "Channdara Kang",
+    "lease_file": "BB Donuts Executed Lease.pdf",
+    "match_confidence": 1.0,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "515 Westheimer - Lease Abstracts.xlsx",
+    "abstract_sheet": "BB's Tex-Orleans",
+    "tenant_dba": "BB's Tex-Orleans",
+    "tenant_legal": "BB's Tex-Orleans Montrose, LLC",
+    "lease_file": "BBTO Lease 10-6-2021 - FINAL - signed.pdf",
+    "match_confidence": 1.0,
+    "match_source": "manual"
+  },
+  {
+    "abstract_file": "515 Westheimer - Lease Abstracts.xlsx",
+    "abstract_sheet": "Nu-Cuts",
+    "tenant_dba": "Nu-Cuts",
+    "tenant_legal": "Nu-Cuts, LLC",
+    "lease_file": "Nu- Cuts, LLC- LEASE.pdf",
+    "match_confidence": 1.0,
+    "match_source": "manual"
+  },
+  {
+    "abstract_file": "515 Westheimer - Lease Abstracts.xlsx",
+    "abstract_sheet": "Pappa Geno's Steak & Cheese",
+    "tenant_dba": "Pappa Geno's Steak & Cheese",
+    "tenant_legal": "Paul Miller",
+    "lease_file": "322.PappaGenos.Lease.pdf",
+    "match_confidence": 1.0,
+    "match_source": "manual"
+  },
+  {
+    "abstract_file": "515 Westheimer - Lease Abstracts.xlsx",
+    "abstract_sheet": "World of Lashes",
+    "tenant_dba": "World of Lashes",
+    "tenant_legal": "Sophia Che",
+    "lease_file": "Optometrist Office - 515 Westheimerr.pdf",
+    "match_confidence": 1.0,
+    "match_source": "manual"
+  },
+  {
+    "abstract_file": "7 Spice - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": null,
+    "tenant_legal": "7 Spice",
+    "lease_file": "Fully Executed Lease - 7 Spice.pdf",
+    "match_confidence": 1.0,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "AT&T - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "AT&T",
+    "tenant_legal": "MOBILY LLC",
+    "lease_file": "AT&T - Executed Lease Agreement - MP 249.pdf",
+    "match_confidence": 1.0,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "Aria Square - Adam & Eve.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Adam & Eve",
+    "tenant_legal": "Intimate Syndicate LLC",
+    "lease_file": "Adam  Eve - Final Lease.docx.pdf",
+    "match_confidence": 1.0,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "Aria Square - T_s Collectibles.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "T's Collectibles",
+    "tenant_legal": "Tuttle & Co Investments, LLC",
+    "lease_file": "Tuttle & Co. - Final Lease.doc.pdf",
+    "match_confidence": 0.6666666666666666,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "Blush Nail spa - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Blush Nail Spa",
+    "tenant_legal": "Blush Nail Spa, LLC",
+    "lease_file": "Blushh Nail Spa - Executed Lease Agreement - MP 249.pdf",
+    "match_confidence": 0.6666666666666666,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "Brazos Liquor - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Brazos Liquor",
+    "tenant_legal": "Ganga and Sunita, Inc.",
+    "lease_file": "Liquor Store Lease Agreement.pdf",
+    "match_confidence": 0.5,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "BunSlut - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "BunSlut",
+    "tenant_legal": "Aaqil and Ali Enterprises, LLC",
+    "lease_file": "Bunslut- Executed Lease Agreement - 515 Westheimer.pdf",
+    "match_confidence": 1.0,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "Carniceria Prime Meat Market - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": null,
+    "tenant_legal": "Carniceria Prime Meat Market, LLC",
+    "lease_file": "Carniceria Prime - Fully Executed Lease Agreement.pdf",
+    "match_confidence": 0.5,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "Chipotle - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Chipotle",
+    "tenant_legal": "Chipotle Mexican Grill, Inc",
+    "lease_file": "Chipotle  Executed Lease.pdf",
+    "match_confidence": 1.0,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "Daiquiri Island - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Daiquiri Island ToGo #11",
+    "tenant_legal": "Arham & Aydin Investments Inc",
+    "lease_file": "FINAL - MP6_Daqiuri Island Lease.pdf",
+    "match_confidence": 1.0,
+    "match_source": "manual"
+  },
+  {
+    "abstract_file": "EOS Fitness Texas - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": null,
+    "tenant_legal": "EOS Fitness Texas, LLC",
+    "lease_file": "Lease - Richmond Location (Tenant Final Version)(2.14.24) (version 4).pdf",
+    "match_confidence": 1.0,
+    "match_source": "manual"
+  },
+  {
+    "abstract_file": "Glass & Vape Co - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Glass & Vape Co.",
+    "tenant_legal": "Aziz Panjwani",
+    "lease_file": "Glass & Vape Co. Suite 130 ( Aziz Panjwani ) Lease.pdf",
+    "match_confidence": 1.0,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "Gong Cha - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Gong Cha",
+    "tenant_legal": "Benjamin Group, Inc.",
+    "lease_file": "executedlease.bldg_A.300GongCha.pdf",
+    "match_confidence": 1.0,
+    "match_source": "manual"
+  },
+  {
+    "abstract_file": "Jersey Mike_s - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Jersey Mike's",
+    "tenant_legal": "Three Amigos Subs, LLC",
+    "lease_file": "Excecuted Lease Agreement -Jersey Mike_s.pdf",
+    "match_confidence": 1.0,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "Kay Lash - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Kay Lash Studio",
+    "tenant_legal": "Hong Nguyen, Huynh Ngoc Kim and Kayla Thu Le",
+    "lease_file": "executedlease.kaylashstudio.04.09.2021.pdf",
+    "match_confidence": 1.0,
+    "match_source": "manual"
+  },
+  {
+    "abstract_file": "Krazy Dog - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Krazy Dog",
+    "tenant_legal": "Krazy Dog, LLC",
+    "lease_file": "Krazy Dogs Executed Lease.pdf",
+    "match_confidence": 0.5,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "La Sicilia - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "LA SICILIA ",
+    "tenant_legal": "LA SICILIA BAKERY & CAF\u00c9, LLC",
+    "lease_file": "La Sicilia Executed Lease - 515 Westheimer.pdf",
+    "match_confidence": 1.0,
+    "match_source": "manual"
+  },
+  {
+    "abstract_file": "Marble Slab - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Marble Slab Creamery and Great American Cookie Company",
+    "tenant_legal": "AI Sweats, LLC",
+    "lease_file": "Marble Slab - Executed Lease Agreement - MP 249.pdf",
+    "match_confidence": 1.0,
+    "match_source": "manual"
+  },
+  {
+    "abstract_file": "Marco_s Pizza - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Marco's Pizza",
+    "tenant_legal": "Sinaali Foods, LLC",
+    "lease_file": "Marco_s Pizza Lease.pdf",
+    "match_confidence": 1.0,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "Mega Square - Adore Lux Familiy Clinic & Med Spa.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Adore Lux Family Clinic & Med Spa",
+    "tenant_legal": "Adore Lux Family Clinic & Med Spa LLC",
+    "lease_file": "Adore Lux Family Clinic  Med Spa - Final Lease (clean).docx.pdf",
+    "match_confidence": 1.0,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "Mega Square - Haus of Flow Wellness.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Haus of Flow Wellness",
+    "tenant_legal": "Haus of Flow Wellness LLC",
+    "lease_file": "Fit N Flow Wellness - Final Lease.docx.pdf",
+    "match_confidence": 0.6666666666666666,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "Mega Square - Le_ Drip.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Le Drip Coffee & Tea",
+    "tenant_legal": "Le' Drip Food & Beverage LLC",
+    "lease_file": "SIGNED_Le Drip - Lease (Tenant version 02.04 to LL).docx.pdf",
+    "match_confidence": 1.0,
+    "match_source": "manual"
+  },
+  {
+    "abstract_file": "Mega Square - Vishala Grocery.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Vishala Grocery",
+    "tenant_legal": "Gurudevdutt Krupa LLC",
+    "lease_file": "Vishala_Grocery_Final_Lease_11_04_25.pdf",
+    "match_confidence": 1.0,
+    "match_source": "manual"
+  },
+  {
+    "abstract_file": "Mtea - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Mtea & Coffee",
+    "tenant_legal": "Mtea & Coffee, LLC",
+    "lease_file": "Executed - Mtea - 600 - Copy.pdf",
+    "match_confidence": 0.5,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "Nguyen Kitchen - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Nguyen Kitchen",
+    "tenant_legal": "Nguyen Kitchen",
+    "lease_file": "Executed Lease - Nguyen Kitchen.pdf",
+    "match_confidence": 1.0,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "P King Chinese - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "P. King Authentic Chinese Restaurant",
+    "tenant_legal": "KQH Tasty, LLC",
+    "lease_file": "Executed - Lease Agreement - P. King - 515 Westheimer.pdf",
+    "match_confidence": 1.0,
+    "match_source": "manual"
+  },
+  {
+    "abstract_file": "Phanh Ky - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Phanh Ky",
+    "tenant_legal": "Phanh Ky",
+    "lease_file": "SIGNED - Phanh Ky Lease.pdf",
+    "match_confidence": 1.0,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "Pho Saigon - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Pho Saigon",
+    "tenant_legal": "Pho Saigon",
+    "lease_file": "Pho Saigon Fully Executed Lease Agreement.pdf",
+    "match_confidence": 1.0,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "Poke in the Bowl - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Poke in the Bowl",
+    "tenant_legal": "Kevin Fei Tong / KT HOUSTON, LLC",
+    "lease_file": "Poke In The Bowl Lease 515.pdf",
+    "match_confidence": 1.0,
+    "match_source": "manual"
+  },
+  {
+    "abstract_file": "Pollo Campero - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Pollo Campero",
+    "tenant_legal": "Pollo Campero of Texas, LLC",
+    "lease_file": "Pollo Campero - Executed Lease Agreement - MP 249 (20240426 - R200).pdf",
+    "match_confidence": 1.0,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "Rakkan Ramen - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Rakkan Ramen",
+    "tenant_legal": "LOVAM 2 LLC",
+    "lease_file": "executedlease.bldg_B.100.RakkanRamen.pdf",
+    "match_confidence": 1.0,
+    "match_source": "manual"
+  },
+  {
+    "abstract_file": "Smoothie king - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Smoothie King",
+    "tenant_legal": "Fahmi Management Corperation",
+    "lease_file": "Lease_Agreement -LTD Investment et al Smoothing King - Fully Executed (1).pdf",
+    "match_confidence": 0.5,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "State Farm - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": null,
+    "tenant_legal": "Apple Insurance Agency LLC",
+    "lease_file": "Executed Lease - State Farm.pdf",
+    "match_confidence": 1.0,
+    "match_source": "manual"
+  },
+  {
+    "abstract_file": "Studio Dentist - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": null,
+    "tenant_legal": "Tien Dang, DDS, PA",
+    "lease_file": "Studio Dental - Tien Dang DDS PA.pdf",
+    "match_confidence": 1.0,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "Tacos El Bigotes - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "Tacos El Bigotes",
+    "tenant_legal": "Tacos El Bigotes 249, LLC",
+    "lease_file": "Executed Lease - 12661 Tomball Pkwy Bldg E Ste 100 - Tacos El Bigote - Copy.pdf",
+    "match_confidence": 0.6666666666666666,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "Twinkle Wonders School - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": null,
+    "tenant_legal": "Twinkle Wonders School, LLC",
+    "lease_file": "Twinkle Wonders - Lease Agreement.pdf",
+    "match_confidence": 0.6666666666666666,
+    "match_source": "auto"
+  },
+  {
+    "abstract_file": "Vapor Lair - Abstract.xlsx",
+    "abstract_sheet": null,
+    "tenant_dba": "The Vapor Lair, LLC",
+    "tenant_legal": "Trong Nguyen",
+    "lease_file": "The Vapor Lair - LEASE.pdf",
+    "match_confidence": 1.0,
+    "match_source": "manual"
+  }
+]
