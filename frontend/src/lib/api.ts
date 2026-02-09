@@ -307,6 +307,15 @@ export const leaseApi = {
   },
 };
 
+// Analytics API
+export const analyticsApi = {
+  getMetrics: () => fetchApi<any>('/api/analytics/metrics'),
+  getFieldStats: () => fetchApi<any[]>('/api/analytics/fields'),
+  getInsights: () => fetchApi<any[]>('/api/analytics/insights'),
+  getAccuracyHistory: () => fetchApi<any[]>('/api/analytics/accuracy-history'),
+  getAccuracyRun: (runId: string) => fetchApi<any>(`/api/analytics/accuracy-run/${runId}`),
+};
+
 // Extraction API
 export const extractionApi = {
   async extract(leaseId: number): Promise<TypeExtraction> {

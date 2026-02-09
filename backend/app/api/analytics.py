@@ -1,5 +1,7 @@
 """Analytics API endpoints."""
-from fastapi import APIRouter, Depends
+import json
+from pathlib import Path
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, case
 from typing import Dict, List, Any
@@ -9,6 +11,9 @@ from app.core.database import get_db
 from app.models.extraction import Extraction
 from app.models.field_correction import FieldCorrection
 from app.models.lease import Lease
+
+# Path to accuracy tracking data (relative to project root)
+DATA_DIR = Path(__file__).resolve().parent.parent.parent.parent / "data"
 
 router = APIRouter()
 
@@ -222,3 +227,28 @@ async def get_insights(db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
             })
     
     return insights
+
+
+@router.get("/accuracy-history")
+async def get_accuracy_history() -> List[Dict[str, Any]]:
+    """Return the accuracy history from data/accuracy_history.json."""
+    history_path = DATA_DIR / "accuracy_history.json"
+    if not history_path.exists():
+        return []
+    with open(history_path) as f:
+        return json.load(f)
+
+
+@router.get("/accuracy-run/{run_id}")
+async def get_accuracy_run(run_id: str) -> Dict[str, Any]:
+    """Return detailed results for a specific accuracy run."""
+    # Look for matching file in data/runs/
+    runs_dir = DATA_DIR / "runs"
+    if not runs_dir.exists():
+        raise HTTPException(status_code=404, detail="Runs directory not found")
+
+    for file in runs_dir.glob(f"{run_id}*.json"):
+        with open(file) as f:
+            return json.load(f)
+
+    raise HTTPException(status_code=404, detail=f"Run {run_id} not found")

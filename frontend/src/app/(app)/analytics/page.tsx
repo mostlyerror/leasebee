@@ -3,23 +3,86 @@
 import { useQuery } from '@tanstack/react-query';
 import { analyticsApi } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, TrendingUp, TrendingDown, Target, CheckCircle2, XCircle, AlertCircle, Lightbulb } from 'lucide-react';
+import { Loader2, TrendingUp, TrendingDown, Target, CheckCircle2, XCircle, AlertCircle, Lightbulb, BarChart3, Activity } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
+import { useMemo } from 'react';
+
+interface AccuracyRun {
+  run_id: string;
+  label: string;
+  timestamp: string;
+  leases_tested: number;
+  leases_errored: number;
+  average_accuracy: number;
+  total_cost: number;
+  total_time: number;
+  field_accuracy: Record<string, number>;
+  per_lease: Array<{ tenant: string; accuracy: number; error?: string | null }>;
+}
+
+function formatFieldName(field: string) {
+  return field.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+}
+
+function accuracyColor(value: number): string {
+  if (value >= 80) return '#22c55e';
+  if (value >= 50) return '#eab308';
+  return '#ef4444';
+}
+
+function accuracyBg(value: number): string {
+  if (value >= 80) return 'bg-green-100 text-green-700';
+  if (value >= 50) return 'bg-yellow-100 text-yellow-700';
+  return 'bg-red-100 text-red-700';
+}
 
 export default function AnalyticsPage() {
-  const { data: metrics, isLoading } = useQuery({
+  const { data: metrics, isLoading } = useQuery<any>({
     queryKey: ['analytics', 'metrics'],
     queryFn: () => analyticsApi.getMetrics(),
   });
 
-  const { data: fieldStats } = useQuery({
+  const { data: fieldStats } = useQuery<any[]>({
     queryKey: ['analytics', 'fields'],
     queryFn: () => analyticsApi.getFieldStats(),
   });
 
-  const { data: insights } = useQuery({
+  const { data: insights } = useQuery<any[]>({
     queryKey: ['analytics', 'insights'],
     queryFn: () => analyticsApi.getInsights(),
   });
+
+  const { data: accuracyHistory } = useQuery<AccuracyRun[]>({
+    queryKey: ['analytics', 'accuracy-history'],
+    queryFn: () => analyticsApi.getAccuracyHistory(),
+  });
+
+  // Derive chart data from accuracy history
+  const trendData = useMemo(() => {
+    if (!accuracyHistory || accuracyHistory.length === 0) return [];
+    return accuracyHistory.map((run) => ({
+      date: new Date(run.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      label: run.label,
+      accuracy: Math.round(run.average_accuracy * 10) / 10,
+      leases: run.leases_tested,
+    }));
+  }, [accuracyHistory]);
+
+  const latestRun = accuracyHistory?.[accuracyHistory.length - 1];
+
+  const fieldBarData = useMemo(() => {
+    if (!latestRun) return [];
+    return Object.entries(latestRun.field_accuracy)
+      .map(([field, accuracy]) => ({ field: formatFieldName(field), accuracy: Math.round(accuracy * 10) / 10, raw: field }))
+      .sort((a, b) => b.accuracy - a.accuracy);
+  }, [latestRun]);
+
+  const improvementDelta = useMemo(() => {
+    if (!accuracyHistory || accuracyHistory.length < 2) return null;
+    const first = accuracyHistory[0].average_accuracy;
+    const last = accuracyHistory[accuracyHistory.length - 1].average_accuracy;
+    return Math.round((last - first) * 10) / 10;
+  }, [accuracyHistory]);
 
   if (isLoading || !metrics) {
     return (
@@ -113,6 +176,208 @@ export default function AnalyticsPage() {
         </Card>
       </div>
 
+      {/* Model Accuracy Section */}
+      {accuracyHistory && accuracyHistory.length > 0 && (
+        <>
+          {/* Accuracy Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-slate-600">
+                  Latest Accuracy
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-3">
+                  <div className="text-3xl font-bold text-slate-900">
+                    {latestRun?.average_accuracy.toFixed(1)}%
+                  </div>
+                  {improvementDelta !== null && (
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                      improvementDelta >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                    }`}>
+                      {improvementDelta >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                      {improvementDelta >= 0 ? '+' : ''}{improvementDelta}pp
+                    </span>
+                  )}
+                </div>
+                <p className="mt-2 text-xs text-slate-500">
+                  Run: {latestRun?.label}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-slate-600">
+                  Total Test Runs
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-slate-900">
+                  {accuracyHistory.length}
+                </div>
+                <p className="mt-2 text-xs text-slate-500">
+                  Accuracy evaluation runs
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-slate-600">
+                  Improvement
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-slate-900">
+                  {improvementDelta !== null ? (
+                    <span className={improvementDelta >= 0 ? 'text-green-600' : 'text-red-600'}>
+                      {improvementDelta >= 0 ? '+' : ''}{improvementDelta}pp
+                    </span>
+                  ) : 'N/A'}
+                </div>
+                <p className="mt-2 text-xs text-slate-500">
+                  Since first run ({accuracyHistory[0]?.average_accuracy.toFixed(1)}%)
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Accuracy Over Time Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-amber-500" />
+                Accuracy Over Time
+              </CardTitle>
+              <p className="text-sm text-slate-600 mt-1">
+                Model accuracy across evaluation runs
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={trendData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#64748b' }} />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(v) => `${v}%`} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: 13 }}
+                      formatter={(value: any) => [`${value}%`, 'Accuracy']}
+                      labelFormatter={(label) => `Run: ${label}`}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="accuracy"
+                      stroke="#f59e0b"
+                      strokeWidth={2.5}
+                      dot={{ r: 5, fill: '#f59e0b', stroke: '#fff', strokeWidth: 2 }}
+                      activeDot={{ r: 7 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Per-Field Accuracy Bar Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-amber-500" />
+                Per-Field Accuracy
+              </CardTitle>
+              <p className="text-sm text-slate-600 mt-1">
+                Field-level accuracy from latest run ({latestRun?.label})
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div style={{ height: Math.max(300, fieldBarData.length * 36) }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={fieldBarData} layout="vertical" margin={{ top: 5, right: 30, left: 120, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
+                    <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(v) => `${v}%`} />
+                    <YAxis type="category" dataKey="field" tick={{ fontSize: 11, fill: '#334155' }} width={115} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: 13 }}
+                      formatter={(value: any) => [`${value}%`, 'Accuracy']}
+                    />
+                    <Bar dataKey="accuracy" radius={[0, 4, 4, 0]} barSize={20}>
+                      {fieldBarData.map((entry, index) => (
+                        <Cell key={index} fill={accuracyColor(entry.accuracy)} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Per-Lease Breakdown Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-amber-500" />
+                Per-Lease Breakdown
+              </CardTitle>
+              <p className="text-sm text-slate-600 mt-1">
+                Individual lease accuracy from latest run ({latestRun?.label})
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-slate-200">
+                      <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">Tenant</th>
+                      <th className="text-center py-3 px-4 text-sm font-medium text-slate-600">Accuracy</th>
+                      <th className="text-center py-3 px-4 text-sm font-medium text-slate-600">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {latestRun?.per_lease.map((lease, idx) => (
+                      <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50">
+                        <td className="py-3 px-4 text-sm font-medium text-slate-900">
+                          {lease.tenant}
+                        </td>
+                        <td className="text-center py-3 px-4">
+                          <div className="inline-flex items-center gap-2">
+                            <span className="text-sm font-semibold text-slate-900">
+                              {lease.accuracy.toFixed(1)}%
+                            </span>
+                            <div className="h-2 w-20 bg-slate-200 rounded-full overflow-hidden">
+                              <div
+                                className="h-full rounded-full"
+                                style={{
+                                  width: `${Math.min(lease.accuracy, 100)}%`,
+                                  backgroundColor: accuracyColor(lease.accuracy),
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </td>
+                        <td className="text-center py-3 px-4">
+                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${accuracyBg(lease.accuracy)}`}>
+                            {lease.accuracy >= 80 ? (
+                              <><CheckCircle2 className="h-3 w-3" /> Good</>
+                            ) : lease.accuracy >= 50 ? (
+                              <><AlertCircle className="h-3 w-3" /> Needs Work</>
+                            ) : (
+                              <><XCircle className="h-3 w-3" /> Poor</>
+                            )}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
+
       {/* Field Performance Table */}
       <Card>
         <CardHeader>
@@ -121,7 +386,7 @@ export default function AnalyticsPage() {
             Field Performance
           </CardTitle>
           <p className="text-sm text-slate-600 mt-1">
-            Accuracy and confidence by field
+            Accuracy and confidence by field (from user reviews)
           </p>
         </CardHeader>
         <CardContent>
@@ -137,10 +402,10 @@ export default function AnalyticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {fieldStats?.map((field) => (
+                {fieldStats?.map((field: any) => (
                   <tr key={field.field} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="py-3 px-4 text-sm font-medium text-slate-900">
-                      {field.field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      {field.field.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
                     </td>
                     <td className="text-center py-3 px-4">
                       <div className="inline-flex items-center gap-2">
@@ -204,8 +469,8 @@ export default function AnalyticsPage() {
         <CardContent>
           {insights && insights.length > 0 ? (
             <div className="space-y-4">
-              {insights.map((insight, index) => {
-                const colors = {
+              {insights.map((insight: any, index: number) => {
+                const colors: Record<string, any> = {
                   critical: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', titleText: 'text-red-900', iconColor: 'text-red-600', icon: AlertCircle },
                   warning: { bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-700', titleText: 'text-yellow-900', iconColor: 'text-yellow-600', icon: AlertCircle },
                   success: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', titleText: 'text-green-900', iconColor: 'text-green-600', icon: CheckCircle2 },
@@ -220,7 +485,7 @@ export default function AnalyticsPage() {
                       <p className={`text-sm ${text} mt-1`}>{insight.message}</p>
                       {insight.recommendation && (
                         <p className={`text-sm ${text} mt-2 font-medium`}>
-                          💡 {insight.recommendation}
+                          Recommendation: {insight.recommendation}
                         </p>
                       )}
                     </div>
@@ -234,37 +499,6 @@ export default function AnalyticsPage() {
               <p>No insights available yet. Submit more reviews to get AI-powered recommendations.</p>
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Coming Soon */}
-      <Card className="border-2 border-dashed border-slate-300">
-        <CardHeader>
-          <CardTitle className="text-slate-600">Coming Soon</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2 text-sm text-slate-600">
-            <li className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-slate-400 rounded-full" />
-              <span>Few-shot example management</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-slate-400 rounded-full" />
-              <span>Prompt version comparison</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-slate-400 rounded-full" />
-              <span>Time-series accuracy trends</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-slate-400 rounded-full" />
-              <span>Confidence calibration analysis</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-slate-400 rounded-full" />
-              <span>Reasoning quality scores</span>
-            </li>
-          </ul>
         </CardContent>
       </Card>
     </div>

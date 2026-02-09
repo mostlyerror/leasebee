@@ -13,8 +13,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -80,3 +80,8 @@ logs/
 uploads/
 pdfs/
 .env.backup
+
+# Data - ignore large binary files, keep tracking data
+data/leases/
+data/abstracts/
+data/baseline_results.json
