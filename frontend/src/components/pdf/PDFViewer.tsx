@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
+import { useState, useRef, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import { ConfidenceHeatmap, HeatmapLegend } from './ConfidenceHeatmap';
+import { FileX, RefreshCw } from 'lucide-react';
 
 // Set PDF.js worker
 if (typeof window !== 'undefined') {
@@ -47,10 +48,40 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(function PDFVi
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.2);
   const [heatmapVisible, setHeatmapVisible] = useState<boolean>(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
+  // Reset error when URL changes
+  useEffect(() => {
+    setLoadError(null);
+  }, [url]);
+
+  // When react-pdf fails, fetch the URL again to get the server error message
+  const handleLoadError = useCallback(() => {
+    if (loadError) return;
+    fetch(url).then((res) => {
+      if (!res.ok) {
+        res.json().catch(() => null).then((body) => {
+          const detail = body?.detail || `Server returned ${res.status}`;
+          if (res.status === 404 || detail.includes('not found')) {
+            setLoadError('Lease not found. It may have been deleted.');
+          } else if (detail.includes('No such file')) {
+            setLoadError('The PDF file is no longer available. It may need to be re-uploaded.');
+          } else {
+            setLoadError(detail);
+          }
+        });
+      } else {
+        setLoadError('Failed to load PDF. The file may be corrupted.');
+      }
+    }).catch(() => {
+      setLoadError('Unable to reach the server. Is the backend running?');
+    });
+  }, [url, loadError]);
+
   const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
+    setLoadError(null);
     setNumPages(numPages);
   }, []);
 
@@ -175,19 +206,32 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(function PDFVi
         ref={containerRef}
         className="flex-1 overflow-auto p-4"
       >
+        {loadError ? (
+          <div className="flex flex-col items-center justify-center h-96 text-center px-6">
+            <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <FileX className="w-7 h-7 text-red-500" />
+            </div>
+            <p className="text-sm font-medium text-slate-900 mb-1">PDF unavailable</p>
+            <p className="text-sm text-slate-500 max-w-sm mb-4">{loadError}</p>
+            <button
+              onClick={() => { setLoadError(null); setNumPages(0); }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Retry
+            </button>
+          </div>
+        ) : (
         <Document
           file={url}
           onLoadSuccess={onDocumentLoadSuccess}
+          onLoadError={handleLoadError}
           loading={
             <div className="flex items-center justify-center h-96">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
             </div>
           }
-          error={
-            <div className="text-red-500 text-center py-8">
-              Failed to load PDF
-            </div>
-          }
+          error={<></>}
         >
           {Array.from(new Array(numPages), (_, index) => {
             const page = index + 1;
@@ -223,6 +267,7 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(function PDFVi
             );
           })}
         </Document>
+        )}
       </div>
     </div>
   );
