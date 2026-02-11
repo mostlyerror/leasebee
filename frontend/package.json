@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "mkdir -p logs && : > logs/dev.log && next dev 2>&1 | tee logs/dev.log",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
