@@ -8,6 +8,7 @@ from app.models.extraction_feedback import ExtractionFeedback
 from app.models.user import User
 from app.models.organization import Organization
 from app.models.organization_member import OrganizationMember
+from app.models.prompt import PromptTemplate
 
 __all__ = [
     "Lease",
@@ -19,4 +20,5 @@ __all__ = [
     "User",
     "Organization",
     "OrganizationMember",
+    "PromptTemplate",
 ]

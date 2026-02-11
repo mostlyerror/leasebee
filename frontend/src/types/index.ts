@@ -47,6 +47,9 @@ export interface Lease {
   status: LeaseStatusType;
   page_count?: number | null;
   error_message?: string | null;
+  avg_confidence?: number | null;
+  low_confidence_count?: number | null;
+  min_confidence?: number | null;
   created_at: string;
   updated_at: string;
   processed_at?: string | null;

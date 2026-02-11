@@ -40,6 +40,11 @@ class Lease(Base):
     # Metadata
     page_count = Column(Integer, nullable=True)
 
+    # Confidence summary (populated after extraction)
+    avg_confidence = Column(Float, nullable=True)
+    low_confidence_count = Column(Integer, nullable=True)
+    min_confidence = Column(Float, nullable=True)
+
     # Multi-tenant fields
     organization_id = Column(
         UUID(as_uuid=True),

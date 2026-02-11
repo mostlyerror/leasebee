@@ -117,19 +117,22 @@ async def list_leases(
     skip: int = 0,
     limit: int = 100,
     organization_id: Optional[UUID] = Query(None, description="Filter by organization ID"),
+    sort_by: Optional[str] = Query(None, description="Sort by: avg_confidence, low_confidence_count, created_at"),
+    sort_order: Optional[str] = Query("asc", description="Sort order: asc or desc"),
+    max_confidence: Optional[float] = Query(None, description="Filter leases with avg_confidence <= this value"),
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_optional_user),
 ):
     """
-    List leases.
-
-    If authenticated with organization_id, returns leases for that organization.
-    If not authenticated, returns all leases (for backward compatibility).
+    List leases with optional sorting and filtering by confidence.
 
     Args:
         skip: Number of records to skip
         limit: Maximum number of records to return
         organization_id: Filter by organization ID
+        sort_by: Sort field (avg_confidence, low_confidence_count, created_at)
+        sort_order: Sort direction (asc or desc)
+        max_confidence: Filter to leases at or below this avg confidence
         db: Database session
         current_user: Current user (optional)
 
@@ -144,7 +147,23 @@ async def list_leases(
         get_organization_member(organization_id, current_user, db)
         query = query.filter(Lease.organization_id == organization_id)
 
-    leases = query.order_by(Lease.created_at.desc()).offset(skip).limit(limit).all()
+    # Filter by max confidence
+    if max_confidence is not None:
+        query = query.filter(Lease.avg_confidence <= max_confidence)
+
+    # Sort
+    sort_column_map = {
+        "avg_confidence": Lease.avg_confidence,
+        "low_confidence_count": Lease.low_confidence_count,
+        "created_at": Lease.created_at,
+    }
+    sort_col = sort_column_map.get(sort_by, Lease.created_at)
+    if sort_order == "asc":
+        query = query.order_by(sort_col.asc().nullslast())
+    else:
+        query = query.order_by(sort_col.desc().nullslast())
+
+    leases = query.offset(skip).limit(limit).all()
     return leases
 
 

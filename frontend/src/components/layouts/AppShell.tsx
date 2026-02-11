@@ -61,6 +61,8 @@ export function AppShell({ children }: AppShellProps) {
     { name: "Dashboard", href: "/" },
     { name: "Leases", href: "/leases" },
     { name: "Analytics", href: "/analytics" },
+    { name: "Examples", href: "/settings/examples" },
+    { name: "Prompts", href: "/settings/prompts" },
   ];
 
   return (

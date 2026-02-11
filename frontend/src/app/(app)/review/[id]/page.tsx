@@ -338,6 +338,7 @@ export default function ReviewPage() {
             feedback={feedback}
             onFieldClick={handleFieldClick}
             onFeedback={handleFeedback}
+            extractionId={extraction?.id}
           />
         </div>
       </div>

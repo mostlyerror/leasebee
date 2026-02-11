@@ -21,7 +21,8 @@ class ClaudeService:
     def extract_lease_data(
         self,
         pdf_bytes: bytes,
-        few_shot_examples: Optional[list] = None
+        few_shot_examples: Optional[list] = None,
+        prompt_template: Optional[dict] = None,
     ) -> Dict[str, Any]:
         """
         Extract structured data from a lease PDF using Claude.
@@ -29,6 +30,7 @@ class ClaudeService:
         Args:
             pdf_bytes: PDF file content as bytes
             few_shot_examples: Optional list of example extractions for few-shot learning
+            prompt_template: Optional dict with prompt template fields and version
 
         Returns:
             Dictionary with:
@@ -41,7 +43,7 @@ class ClaudeService:
         start_time = time.time()
 
         # Build the prompt
-        prompt = self._build_extraction_prompt(few_shot_examples)
+        prompt = self._build_extraction_prompt(few_shot_examples, prompt_template)
 
         try:
             # Encode PDF to base64
@@ -99,7 +101,8 @@ class ClaudeService:
         self,
         pdf_bytes: bytes,
         confidence_threshold: float = 0.70,
-        few_shot_examples: Optional[list] = None
+        few_shot_examples: Optional[list] = None,
+        prompt_template: Optional[dict] = None,
     ) -> Dict[str, Any]:
         """
         Extract with multi-pass refinement for low-confidence fields.
@@ -114,12 +117,13 @@ class ClaudeService:
             pdf_bytes: PDF file content as bytes
             confidence_threshold: Threshold below which to re-extract (default 0.70)
             few_shot_examples: Optional examples for few-shot learning
+            prompt_template: Optional dict with prompt template fields and version
 
         Returns:
             Dictionary with merged extraction results and metadata
         """
         # Pass 1: Extract all fields
-        initial_result = self.extract_lease_data(pdf_bytes, few_shot_examples)
+        initial_result = self.extract_lease_data(pdf_bytes, few_shot_examples, prompt_template)
 
         # Identify low-confidence fields
         low_confidence_fields = [
@@ -334,12 +338,18 @@ Now perform the focused re-extraction. Return ONLY the JSON object, no other tex
 
         return merged
 
-    def _build_extraction_prompt(self, few_shot_examples: Optional[list] = None) -> str:
+    def _build_extraction_prompt(
+        self,
+        few_shot_examples: Optional[list] = None,
+        prompt_template: Optional[dict] = None,
+    ) -> str:
         """
         Build the extraction prompt for Claude.
 
         Args:
             few_shot_examples: Optional examples for few-shot learning
+            prompt_template: Optional dict with keys: system_prompt, field_type_guidance,
+                           extraction_examples, null_value_guidance, version
 
         Returns:
             Complete prompt string
@@ -348,7 +358,15 @@ Now perform the focused re-extraction. Return ONLY the JSON object, no other tex
         schema = get_schema_for_claude()
         field_paths = get_field_paths()
 
-        prompt = f"""You are a commercial lease abstraction expert. Extract structured information from this lease PDF.
+        # Use template if provided, otherwise fall back to hardcoded
+        if prompt_template:
+            self.prompt_version = prompt_template.get('version', self.prompt_version)
+            system_prompt = prompt_template['system_prompt']
+            field_type_guidance = prompt_template['field_type_guidance']
+            extraction_examples = prompt_template['extraction_examples']
+            null_value_guidance = prompt_template['null_value_guidance']
+        else:
+            system_prompt = """You are a commercial lease abstraction expert. Extract structured information from this lease PDF.
 
 For each field in the schema below:
 1. Extract the exact value from the document
@@ -366,20 +384,25 @@ Return a JSON object with this EXACT structure:
   "reasoning": {{"field_path": "explanation"}},
   "citations": {{"field_path": {{"page": number, "quote": "brief relevant quote"}}}},
   "confidence": {{"field_path": 0.95}}
-}}
+}}"""
+            field_type_guidance = self._get_field_type_guidance()
+            extraction_examples = self._get_extraction_examples()
+            null_value_guidance = self._get_null_value_guidance()
+
+        prompt = f"""{system_prompt}
 
 FIELD SCHEMA:
 {schema}
 
-{self._get_field_type_guidance()}
+{field_type_guidance}
 
-{self._get_extraction_examples()}
+{extraction_examples}
 
-{self._get_null_value_guidance()}
+{null_value_guidance}
 
 """
 
-        # Add few-shot examples if provided (for Phase 3)
+        # Add few-shot examples if provided
         if few_shot_examples:
             prompt += "\n\nEXAMPLES OF CORRECT EXTRACTIONS:\n\n"
             for example in few_shot_examples:

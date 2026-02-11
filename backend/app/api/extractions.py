@@ -9,6 +9,8 @@ from app.core.database import get_db
 from app.models.lease import Lease, LeaseStatus
 from app.models.extraction import Extraction
 from app.models.field_correction import FieldCorrection
+from app.models.few_shot_example import FewShotExample
+from app.models.prompt import PromptTemplate
 from app.schemas.pydantic_schemas import (
     ExtractionResponse,
     ExtractionUpdate,
@@ -89,12 +91,62 @@ async def extract_lease_data(
 
         # Stage: AI Analyzing
         tracker.advance_stage(ExtractionStage.ANALYZING)
-        
+
+        # Load active few-shot examples for prompt enhancement
+        few_shot_examples_db = (
+            db.query(FewShotExample)
+            .filter(FewShotExample.is_active == True)
+            .order_by(FewShotExample.quality_score.desc().nullslast())
+            .limit(30)
+            .all()
+        )
+        few_shot_examples = None
+        if few_shot_examples_db:
+            few_shot_examples = [
+                {
+                    "field_path": ex.field_path,
+                    "source_text": ex.source_text,
+                    "correct_value": ex.correct_value,
+                    "reasoning": ex.reasoning or "",
+                }
+                for ex in few_shot_examples_db
+            ]
+            # Increment usage_count on loaded examples
+            for ex in few_shot_examples_db:
+                ex.usage_count = (ex.usage_count or 0) + 1
+            db.flush()
+
+        # Load active prompt template (if one exists)
+        active_prompt = (
+            db.query(PromptTemplate)
+            .filter(PromptTemplate.is_active == True)
+            .first()
+        )
+        prompt_template_dict = None
+        if active_prompt:
+            prompt_template_dict = {
+                "version": active_prompt.version,
+                "system_prompt": active_prompt.system_prompt,
+                "field_type_guidance": active_prompt.field_type_guidance,
+                "extraction_examples": active_prompt.extraction_examples,
+                "null_value_guidance": active_prompt.null_value_guidance,
+            }
+            active_prompt.usage_count = (active_prompt.usage_count or 0) + 1
+            db.flush()
+
         # Extract data using Claude (with multi-pass if enabled)
         if use_multi_pass:
-            result = claude_service.extract_lease_data_with_refinement(pdf_bytes)
+            result = claude_service.extract_lease_data_with_refinement(
+                pdf_bytes,
+                few_shot_examples=few_shot_examples,
+                prompt_template=prompt_template_dict,
+            )
         else:
-            result = claude_service.extract_lease_data(pdf_bytes)
+            result = claude_service.extract_lease_data(
+                pdf_bytes,
+                few_shot_examples=few_shot_examples,
+                prompt_template=prompt_template_dict,
+            )
 
         # Stage: Parsing results
         tracker.advance_stage(ExtractionStage.PARSING)
@@ -143,10 +195,11 @@ async def extract_lease_data(
                     if validation_result.warnings:
                         validation_warnings[field_path] = validation_result.warnings
 
-        # Add validation warnings to metadata
+        # Add validation warnings and few-shot info to metadata
         if 'metadata' not in result:
             result['metadata'] = {}
         result['metadata']['validation_warnings'] = validation_warnings
+        result['metadata']['few_shot_example_count'] = len(few_shot_examples) if few_shot_examples else 0
         
         # Stage: Validating
         tracker.advance_stage(ExtractionStage.VALIDATING)
@@ -172,9 +225,17 @@ async def extract_lease_data(
 
         db.add(extraction)
 
-        # Update lease status
+        # Update lease status and confidence summary
         lease.status = LeaseStatus.COMPLETED
         lease.processed_at = datetime.utcnow()
+
+        # Compute confidence summary from extracted confidence scores
+        if confidence_dict:
+            confidence_values = [v for v in confidence_dict.values() if isinstance(v, (int, float))]
+            if confidence_values:
+                lease.avg_confidence = round(sum(confidence_values) / len(confidence_values), 4)
+                lease.min_confidence = round(min(confidence_values), 4)
+                lease.low_confidence_count = sum(1 for v in confidence_values if v < 0.70)
 
         db.commit()
         db.refresh(extraction)

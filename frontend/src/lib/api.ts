@@ -317,6 +317,133 @@ export const analyticsApi = {
   getAccuracyRun: (runId: string) => fetchApi<any>(`/api/analytics/accuracy-run/${runId}`),
 };
 
+// Few-Shot Examples API
+export interface FewShotExample {
+  id: number;
+  field_path: string;
+  source_text: string;
+  correct_value: string;
+  reasoning?: string;
+  quality_score?: number;
+  usage_count: number;
+  is_active: boolean;
+  created_at: string;
+  created_from_correction_id?: number;
+}
+
+export const fewShotApi = {
+  async list(params?: { field_path?: string; is_active?: boolean }): Promise<FewShotExample[]> {
+    const searchParams = new URLSearchParams();
+    if (params?.field_path) searchParams.set('field_path', params.field_path);
+    if (params?.is_active !== undefined) searchParams.set('is_active', String(params.is_active));
+    const qs = searchParams.toString();
+    return fetchApi(`/api/few-shot/${qs ? `?${qs}` : ''}`);
+  },
+
+  async create(data: {
+    field_path: string;
+    source_text: string;
+    correct_value: string;
+    reasoning?: string;
+    quality_score?: number;
+  }): Promise<FewShotExample> {
+    return fetchApi('/api/few-shot/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  },
+
+  async promoteCorrection(correctionId: number): Promise<FewShotExample> {
+    return fetchApi(`/api/few-shot/from-correction/${correctionId}`, {
+      method: 'POST',
+    });
+  },
+
+  async update(id: number, data: Partial<{
+    field_path: string;
+    source_text: string;
+    correct_value: string;
+    reasoning: string;
+    quality_score: number;
+    is_active: boolean;
+  }>): Promise<FewShotExample> {
+    return fetchApi(`/api/few-shot/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  },
+
+  async delete(id: number): Promise<void> {
+    await fetchApi(`/api/few-shot/${id}`, { method: 'DELETE' });
+  },
+};
+
+// Prompt Templates API
+export interface PromptTemplate {
+  id: number;
+  version: string;
+  name: string;
+  description?: string;
+  system_prompt: string;
+  field_type_guidance: string;
+  extraction_examples: string;
+  null_value_guidance: string;
+  is_active: boolean;
+  created_at: string;
+  usage_count: number;
+  avg_confidence?: number;
+}
+
+export const promptApi = {
+  async list(): Promise<PromptTemplate[]> {
+    return fetchApi('/api/prompts/');
+  },
+
+  async getActive(): Promise<PromptTemplate> {
+    return fetchApi('/api/prompts/active');
+  },
+
+  async create(data: {
+    name: string;
+    description?: string;
+    system_prompt: string;
+    field_type_guidance: string;
+    extraction_examples: string;
+    null_value_guidance: string;
+  }): Promise<PromptTemplate> {
+    return fetchApi('/api/prompts/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  },
+
+  async update(id: number, data: Partial<{
+    name: string;
+    description: string;
+    system_prompt: string;
+    field_type_guidance: string;
+    extraction_examples: string;
+    null_value_guidance: string;
+  }>): Promise<PromptTemplate> {
+    return fetchApi(`/api/prompts/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  },
+
+  async activate(id: number): Promise<PromptTemplate> {
+    return fetchApi(`/api/prompts/${id}/activate`, { method: 'POST' });
+  },
+
+  async duplicate(id: number): Promise<PromptTemplate> {
+    return fetchApi(`/api/prompts/${id}/duplicate`, { method: 'POST' });
+  },
+};
+
 // Extraction API
 export const extractionApi = {
   async extract(leaseId: number): Promise<Extraction> {

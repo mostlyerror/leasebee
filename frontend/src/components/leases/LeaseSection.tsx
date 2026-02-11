@@ -10,6 +10,7 @@ interface LeaseSectionProps {
   icon: ReactNode;
   color: 'red' | 'blue' | 'amber' | 'green';
   defaultExpanded?: boolean;
+  headerExtra?: ReactNode;
   children: ReactNode;
 }
 
@@ -46,6 +47,7 @@ export function LeaseSection({
   icon,
   color,
   defaultExpanded = true,
+  headerExtra,
   children,
 }: LeaseSectionProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -76,6 +78,7 @@ export function LeaseSection({
           >
             {count}
           </span>
+          {headerExtra}
         </div>
         {expanded ? (
           <ChevronDown className={cn('w-5 h-5', colors.text)} />

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, X, ChevronDown, ChevronUp, AlertCircle, Quote, FileText } from 'lucide-react';
+import { Check, X, ChevronDown, ChevronUp, AlertCircle, Quote, FileText, Star } from 'lucide-react';
+import { fewShotApi } from '@/lib/api';
 
 interface FieldValue {
   path: string;
@@ -30,6 +31,7 @@ interface FieldReviewPanelProps {
   feedback: Record<string, FieldFeedback>;
   onFieldClick: (fieldPath: string) => void;
   onFeedback: (fieldPath: string, isCorrect: boolean, correctedValue?: any) => void;
+  extractionId?: number;
 }
 
 function getConfidenceColor(confidence: number): string {
@@ -50,10 +52,38 @@ export function FieldReviewPanel({
   feedback,
   onFieldClick,
   onFeedback,
+  extractionId,
 }: FieldReviewPanelProps) {
   const [expandedField, setExpandedField] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>('');
+  const [promotedFields, setPromotedFields] = useState<Set<string>>(new Set());
+  const [promotingField, setPromotingField] = useState<string | null>(null);
+
+  const handlePromoteToExample = async (field: FieldValue, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const fieldFeedback = feedback[field.path];
+    const correctValue = fieldFeedback?.correctedValue ?? field.value;
+    const sourceText = field.citation
+      ? `Page ${field.citation.page}: ${field.citation.quote}`
+      : String(field.value ?? '');
+
+    setPromotingField(field.path);
+    try {
+      await fewShotApi.create({
+        field_path: field.path,
+        source_text: sourceText,
+        correct_value: String(correctValue ?? ''),
+        reasoning: field.reasoning || undefined,
+        quality_score: fieldFeedback?.correctedValue ? 1.0 : 0.8,
+      });
+      setPromotedFields((prev) => new Set(prev).add(field.path));
+    } catch (err) {
+      console.error('Failed to promote to example:', err);
+    } finally {
+      setPromotingField(null);
+    }
+  };
 
   // Group fields by category
   const groupedFields = fields.reduce((acc, field) => {
@@ -228,6 +258,22 @@ export function FieldReviewPanel({
                             <span className="hidden sm:inline">Edit</span>
                           </button>
                           
+                          {/* Promote to Example button - visible on edited/rejected fields */}
+                          {(isRejected || fieldFeedback?.correctedValue) && (
+                            <button
+                              onClick={(e) => handlePromoteToExample(field, e)}
+                              disabled={promotedFields.has(field.path) || promotingField === field.path}
+                              className={`p-1 rounded transition-colors ${
+                                promotedFields.has(field.path)
+                                  ? 'text-amber-500'
+                                  : 'text-gray-400 hover:text-amber-500'
+                              }`}
+                              title={promotedFields.has(field.path) ? 'Promoted to example' : 'Promote to few-shot example'}
+                            >
+                              <Star className={`w-4 h-4 ${promotedFields.has(field.path) ? 'fill-amber-500' : ''}`} />
+                            </button>
+                          )}
+
                           {/* Expand button for details */}
                           <button
                             onClick={(e) => handleExpand(field.path, e)}

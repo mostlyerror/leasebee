@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Lease } from '@/types';
 import { LeaseSection } from './LeaseSection';
 import { LeaseQueueItem } from './LeaseQueueItem';
@@ -14,6 +15,8 @@ interface LeaseWorkQueueProps {
 }
 
 export function LeaseWorkQueue({ leases, onUpdate }: LeaseWorkQueueProps) {
+  const [confidenceFilter, setConfidenceFilter] = useState<number | null>(null);
+
   const deleteMutation = useMutation({
     mutationFn: leaseApi.delete,
     onSuccess: onUpdate,
@@ -31,7 +34,11 @@ export function LeaseWorkQueue({ leases, onUpdate }: LeaseWorkQueueProps) {
   });
 
   // Group leases by status
-  const needsReview = leases.filter((l) => l.status === 'completed');
+  const needsReview = leases
+    .filter((l) => l.status === 'completed')
+    .filter((l) => confidenceFilter === null || (l.avg_confidence != null && l.avg_confidence <= confidenceFilter))
+    // Sort by avg_confidence ascending (lowest confidence first = most needs review)
+    .sort((a, b) => (a.avg_confidence ?? 1) - (b.avg_confidence ?? 1));
   const processing = leases.filter((l) => l.status === 'processing');
   const failed = leases.filter((l) => l.status === 'failed');
 
@@ -49,13 +56,26 @@ export function LeaseWorkQueue({ leases, onUpdate }: LeaseWorkQueueProps) {
   return (
     <div className="space-y-4">
       {/* Needs Review Section */}
-      {needsReview.length > 0 && (
+      {(needsReview.length > 0 || confidenceFilter !== null) && (
         <LeaseSection
           title="NEEDS REVIEW"
           count={needsReview.length}
           icon={<AlertCircle className="w-6 h-6" />}
           color="blue"
           defaultExpanded={true}
+          headerExtra={
+            <select
+              value={confidenceFilter ?? ''}
+              onChange={(e) => setConfidenceFilter(e.target.value ? parseFloat(e.target.value) : null)}
+              onClick={(e) => e.stopPropagation()}
+              className="ml-3 px-2 py-1 text-xs border border-slate-200 rounded-md bg-white text-slate-600"
+            >
+              <option value="">All confidence</option>
+              <option value="0.5">Low (&le; 50%)</option>
+              <option value="0.7">Medium (&le; 70%)</option>
+              <option value="0.85">Below high (&le; 85%)</option>
+            </select>
+          }
         >
           {needsReview.map((lease) => (
             <LeaseQueueItem
