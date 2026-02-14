@@ -64,7 +64,7 @@ install-frontend:
 dev:
 	@echo "🚀 Starting LeaseBee development servers..."
 	@echo "   Backend:  http://localhost:8000"
-	@echo "   Frontend: http://localhost:3000"
+	@echo "   Frontend: http://localhost:3000 (auto-increments if port busy)"
 	@echo ""
 	@which concurrently >/dev/null 2>&1 || (echo "📦 Installing concurrently..." && npm install -g concurrently)
 	@concurrently \
