@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { promptApi, handleApiError } from '@/lib/api';
 import type { PromptTemplate } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { Check, Copy, Plus, Save } from 'lucide-react';
+import { Check, Copy, Plus, Save, Trash2 } from 'lucide-react';
 
 const TABS = [
   { key: 'system_prompt', label: 'System Prompt' },
@@ -88,6 +88,17 @@ export default function PromptEditorPage() {
       setSelectedId(newPrompt.id);
     },
     onError: (error: any) => alert(`Duplicate failed: ${handleApiError(error)}`),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => promptApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['prompts'] });
+      if (selectedId === deleteMutation.variables) {
+        setSelectedId(null);
+      }
+    },
+    onError: (error: any) => alert(`Delete failed: ${handleApiError(error)}`),
   });
 
   const createMutation = useMutation({
@@ -213,20 +224,36 @@ export default function PromptEditorPage() {
                   Duplicate
                 </Button>
                 {!selectedPrompt.is_active && (
-                  <Button
-                    onClick={() => {
-                      if (confirm(`Activate v${selectedPrompt.version}? This will deactivate the current active prompt.`)) {
-                        activateMutation.mutate(selectedPrompt.id);
-                      }
-                    }}
-                    disabled={activateMutation.isPending}
-                    variant="outline"
-                    size="sm"
-                    className="text-green-700 border-green-300 hover:bg-green-50"
-                  >
-                    <Check className="w-4 h-4 mr-1" />
-                    Activate
-                  </Button>
+                  <>
+                    <Button
+                      onClick={() => {
+                        if (confirm(`Activate v${selectedPrompt.version}? This will deactivate the current active prompt.`)) {
+                          activateMutation.mutate(selectedPrompt.id);
+                        }
+                      }}
+                      disabled={activateMutation.isPending}
+                      variant="outline"
+                      size="sm"
+                      className="text-green-700 border-green-300 hover:bg-green-50"
+                    >
+                      <Check className="w-4 h-4 mr-1" />
+                      Activate
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (confirm(`Delete v${selectedPrompt.version}? This cannot be undone.`)) {
+                          deleteMutation.mutate(selectedPrompt.id);
+                        }
+                      }}
+                      disabled={deleteMutation.isPending}
+                      variant="outline"
+                      size="sm"
+                      className="text-red-700 border-red-300 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Delete
+                    </Button>
+                  </>
                 )}
                 <Button
                   onClick={() => saveMutation.mutate()}

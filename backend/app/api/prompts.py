@@ -130,6 +130,29 @@ async def activate_prompt(
     return prompt
 
 
+@router.delete("/{prompt_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_prompt(
+    prompt_id: int,
+    db: Session = Depends(get_db),
+):
+    """Delete a prompt template (cannot delete the active version)."""
+    prompt = db.query(PromptTemplate).filter(PromptTemplate.id == prompt_id).first()
+    if not prompt:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Prompt template not found",
+        )
+    if prompt.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete the active prompt template",
+        )
+
+    db.delete(prompt)
+    db.commit()
+    return None
+
+
 @router.post("/{prompt_id}/duplicate", response_model=PromptTemplateResponse, status_code=status.HTTP_201_CREATED)
 async def duplicate_prompt(
     prompt_id: int,

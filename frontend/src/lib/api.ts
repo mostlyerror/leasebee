@@ -142,6 +142,10 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
     throw new Error(`API Error: ${response.status} - ${error}`);
   }
 
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   return response.json();
 }
 
@@ -315,6 +319,14 @@ export const analyticsApi = {
   getInsights: () => fetchApi<any[]>('/api/analytics/insights'),
   getAccuracyHistory: () => fetchApi<any[]>('/api/analytics/accuracy-history'),
   getAccuracyRun: (runId: string) => fetchApi<any>(`/api/analytics/accuracy-run/${runId}`),
+  startBaselineRun: (config: { num_leases: number; multi_pass: boolean }) =>
+    fetchApi<{ status: string }>('/api/analytics/baseline-run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(config),
+    }),
+  getBaselineProgress: () => fetchApi<any>('/api/analytics/baseline-run/progress'),
+  getEligibleCount: () => fetchApi<{ count: number }>('/api/analytics/baseline-run/eligible-count'),
 };
 
 // Few-Shot Examples API
@@ -441,6 +453,10 @@ export const promptApi = {
 
   async duplicate(id: number): Promise<PromptTemplate> {
     return fetchApi(`/api/prompts/${id}/duplicate`, { method: 'POST' });
+  },
+
+  async delete(id: number): Promise<void> {
+    await fetchApi(`/api/prompts/${id}`, { method: 'DELETE' });
   },
 };
 
