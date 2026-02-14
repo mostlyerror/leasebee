@@ -1,16 +1,25 @@
 """Analytics API endpoints."""
 import json
+import time
+import threading
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, case
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 
 from app.core.database import get_db
 from app.models.extraction import Extraction
 from app.models.field_correction import FieldCorrection
 from app.models.lease import Lease
+from app.services.baseline_service import (
+    run_baseline,
+    get_run_state,
+    clear_run_state,
+    get_eligible_leases,
+)
 
 # Path to accuracy tracking data (relative to project root)
 DATA_DIR = Path(__file__).resolve().parent.parent.parent.parent / "data"
@@ -252,3 +261,51 @@ async def get_accuracy_run(run_id: str) -> Dict[str, Any]:
             return json.load(f)
 
     raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
+
+
+# ── Baseline accuracy run endpoints ──
+
+
+class BaselineRunRequest(BaseModel):
+    num_leases: int = Field(default=5, ge=1, le=50)
+    multi_pass: bool = False
+
+
+@router.post("/baseline-run")
+async def start_baseline_run(body: BaselineRunRequest) -> Dict[str, Any]:
+    """Start a baseline accuracy run in a background thread."""
+    state = get_run_state()
+    if state.get('status') in ('running',):
+        raise HTTPException(status_code=409, detail="A baseline run is already in progress")
+
+    # Clear any stale complete/error state before starting
+    clear_run_state()
+
+    def _run():
+        try:
+            run_baseline(
+                num_leases=body.num_leases,
+                multi_pass=body.multi_pass,
+            )
+        except Exception:
+            pass  # Error is captured in run state
+
+    t = threading.Thread(target=_run, daemon=True)
+    t.start()
+
+    # Brief sleep to let the thread initialise state
+    time.sleep(0.1)
+
+    return {"status": "started"}
+
+
+@router.get("/baseline-run/progress")
+async def get_baseline_progress() -> Dict[str, Any]:
+    """Return current baseline run progress."""
+    return get_run_state()
+
+
+@router.get("/baseline-run/eligible-count")
+async def get_eligible_count() -> Dict[str, int]:
+    """Return the number of eligible gold-standard leases."""
+    return {"count": get_eligible_leases()}

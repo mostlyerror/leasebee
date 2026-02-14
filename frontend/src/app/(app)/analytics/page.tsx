@@ -1,11 +1,13 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { analyticsApi } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, TrendingUp, TrendingDown, Target, CheckCircle2, XCircle, AlertCircle, Lightbulb, BarChart3, Activity } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Loader2, TrendingUp, TrendingDown, Target, CheckCircle2, XCircle, AlertCircle, Lightbulb, BarChart3, Activity, Play, FlaskConical, Clock, ArrowDown } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 
 interface AccuracyRun {
   run_id: string;
@@ -36,7 +38,35 @@ function accuracyBg(value: number): string {
   return 'bg-red-100 text-red-700';
 }
 
+interface BaselineProgress {
+  status: 'idle' | 'running' | 'complete' | 'error';
+  run_id?: string;
+  current_lease?: number;
+  total_leases?: number;
+  current_tenant?: string;
+  completed_results?: Array<{
+    tenant: string;
+    accuracy: number;
+    fields_correct?: number;
+    fields_total?: number;
+    error?: string;
+  }>;
+  elapsed_seconds?: number;
+  estimated_remaining?: number;
+  overall_accuracy?: number;
+  run_summary?: any;
+  error?: string;
+}
+
+function formatElapsed(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
+
 export default function AnalyticsPage() {
+  const queryClient = useQueryClient();
+
   const { data: metrics, isLoading } = useQuery<any>({
     queryKey: ['analytics', 'metrics'],
     queryFn: () => analyticsApi.getMetrics(),
@@ -56,6 +86,80 @@ export default function AnalyticsPage() {
     queryKey: ['analytics', 'accuracy-history'],
     queryFn: () => analyticsApi.getAccuracyHistory(),
   });
+
+  const { data: eligibleData } = useQuery<{ count: number }>({
+    queryKey: ['analytics', 'eligible-count'],
+    queryFn: () => analyticsApi.getEligibleCount(),
+  });
+
+  // Baseline test runner state
+  const [numLeases, setNumLeases] = useState(2);
+  const [multiPass, setMultiPass] = useState(false);
+  const [progress, setProgress] = useState<BaselineProgress>({ status: 'idle' });
+  const [startError, setStartError] = useState<string | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  const maxLeases = eligibleData?.count ?? 43;
+
+  const stopPolling = useCallback(() => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }, []);
+
+  const startPolling = useCallback(() => {
+    stopPolling();
+    pollRef.current = setInterval(async () => {
+      try {
+        const p = await analyticsApi.getBaselineProgress();
+        setProgress(p);
+        if (p.status === 'complete' || p.status === 'error') {
+          stopPolling();
+          // Invalidate accuracy history so charts refresh
+          queryClient.invalidateQueries({ queryKey: ['analytics', 'accuracy-history'] });
+        }
+      } catch {
+        // ignore transient errors
+      }
+    }, 3000);
+  }, [stopPolling, queryClient]);
+
+  // Check for an in-progress run on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const p = await analyticsApi.getBaselineProgress();
+        if (p.status === 'running') {
+          setProgress(p);
+          startPolling();
+        }
+      } catch {
+        // ignore
+      }
+    })();
+    return stopPolling;
+  }, [startPolling, stopPolling]);
+
+  const handleStartRun = async () => {
+    setStartError(null);
+    try {
+      await analyticsApi.startBaselineRun({ num_leases: numLeases, multi_pass: multiPass });
+      setProgress({ status: 'running', current_lease: 0, total_leases: numLeases, completed_results: [], elapsed_seconds: 0, estimated_remaining: 0, overall_accuracy: 0 });
+      startPolling();
+    } catch (err: any) {
+      if (err.message?.includes('409')) {
+        setStartError('A test is already running');
+      } else {
+        setStartError(err.message || 'Failed to start test');
+      }
+    }
+  };
+
+  const handleReset = () => {
+    setProgress({ status: 'idle' });
+  };
 
   // Derive chart data from accuracy history
   const trendData = useMemo(() => {
@@ -101,6 +205,226 @@ export default function AnalyticsPage() {
           Monitor extraction accuracy and continuous improvement over time
         </p>
       </div>
+
+      {/* Accuracy Test Runner */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FlaskConical className="h-5 w-5 text-amber-500" />
+            Accuracy Test
+          </CardTitle>
+          <p className="text-sm text-slate-600 mt-1">
+            Runs extraction on gold-standard leases and scores accuracy against known correct values
+          </p>
+        </CardHeader>
+        <CardContent>
+          {progress.status === 'idle' && (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-end gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Number of leases
+                  </label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={maxLeases}
+                    value={numLeases}
+                    onChange={(e) => setNumLeases(Math.max(1, Math.min(maxLeases, parseInt(e.target.value) || 1)))}
+                    className="w-24"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">{maxLeases} eligible</p>
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={multiPass}
+                      onChange={(e) => setMultiPass(e.target.checked)}
+                      className="rounded border-slate-300"
+                    />
+                    Multi-pass refinement
+                  </label>
+                  <p className="text-xs text-slate-500 mt-1">Slower but may improve accuracy</p>
+                </div>
+                <Button onClick={handleStartRun} className="gap-2">
+                  <Play className="h-4 w-4" />
+                  Run Test
+                </Button>
+              </div>
+              {startError && (
+                <p className="text-sm text-red-600">{startError}</p>
+              )}
+            </div>
+          )}
+
+          {progress.status === 'running' && (
+            <div className="space-y-4">
+              {/* Progress header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
+                  <span className="text-sm font-medium text-slate-900">
+                    Testing lease {progress.current_lease}/{progress.total_leases}
+                    {progress.current_tenant && <> &mdash; {progress.current_tenant}</>}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-xs text-slate-500">
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {formatElapsed(progress.elapsed_seconds ?? 0)}
+                  </span>
+                  {(progress.estimated_remaining ?? 0) > 0 && (
+                    <span>~{formatElapsed(progress.estimated_remaining!)} remaining</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Progress bar */}
+              <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-amber-500 rounded-full transition-all duration-500"
+                  style={{ width: `${((progress.current_lease ?? 0) / (progress.total_leases ?? 1)) * 100}%` }}
+                />
+              </div>
+
+              {/* Overall accuracy so far */}
+              {(progress.overall_accuracy ?? 0) > 0 && (
+                <div className="text-sm text-slate-600">
+                  Overall accuracy so far: <span className="font-semibold text-slate-900">{progress.overall_accuracy?.toFixed(1)}%</span>
+                </div>
+              )}
+
+              {/* Completed lease results */}
+              {progress.completed_results && progress.completed_results.length > 0 && (
+                <div className="border border-slate-200 rounded-lg overflow-hidden">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className="text-left py-2 px-3 text-xs font-medium text-slate-600">Tenant</th>
+                        <th className="text-center py-2 px-3 text-xs font-medium text-slate-600">Accuracy</th>
+                        <th className="text-center py-2 px-3 text-xs font-medium text-slate-600">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {progress.completed_results.map((r, idx) => (
+                        <tr key={idx} className="border-b border-slate-100">
+                          <td className="py-2 px-3 text-sm text-slate-900">{r.tenant}</td>
+                          <td className="text-center py-2 px-3">
+                            <div className="inline-flex items-center gap-2">
+                              <span className="text-sm font-semibold text-slate-900">
+                                {r.error ? 'ERR' : `${r.accuracy.toFixed(1)}%`}
+                              </span>
+                              {!r.error && (
+                                <div className="h-1.5 w-16 bg-slate-200 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full"
+                                    style={{ width: `${Math.min(r.accuracy, 100)}%`, backgroundColor: accuracyColor(r.accuracy) }}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="text-center py-2 px-3">
+                            {r.error ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                                <XCircle className="h-3 w-3" /> Error
+                              </span>
+                            ) : (
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${accuracyBg(r.accuracy)}`}>
+                                {r.accuracy >= 80 ? <CheckCircle2 className="h-3 w-3" /> : r.accuracy >= 50 ? <AlertCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                                {r.accuracy >= 80 ? 'Good' : r.accuracy >= 50 ? 'Needs Work' : 'Poor'}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {progress.status === 'complete' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                  <span className="text-base font-semibold text-slate-900">
+                    Test complete &mdash; {progress.overall_accuracy?.toFixed(1)}% accuracy across {progress.total_leases} leases
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => resultsRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                    className="gap-1"
+                  >
+                    <ArrowDown className="h-3 w-3" />
+                    View Full Results
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={handleReset}>
+                    New Test
+                  </Button>
+                </div>
+              </div>
+
+              {/* Completed results summary */}
+              {progress.completed_results && progress.completed_results.length > 0 && (
+                <div className="border border-slate-200 rounded-lg overflow-hidden">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className="text-left py-2 px-3 text-xs font-medium text-slate-600">Tenant</th>
+                        <th className="text-center py-2 px-3 text-xs font-medium text-slate-600">Accuracy</th>
+                        <th className="text-center py-2 px-3 text-xs font-medium text-slate-600">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {progress.completed_results.map((r, idx) => (
+                        <tr key={idx} className="border-b border-slate-100">
+                          <td className="py-2 px-3 text-sm text-slate-900">{r.tenant}</td>
+                          <td className="text-center py-2 px-3">
+                            <span className="text-sm font-semibold text-slate-900">
+                              {r.error ? 'ERR' : `${r.accuracy.toFixed(1)}%`}
+                            </span>
+                          </td>
+                          <td className="text-center py-2 px-3">
+                            {r.error ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                                <XCircle className="h-3 w-3" /> Error
+                              </span>
+                            ) : (
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${accuracyBg(r.accuracy)}`}>
+                                {r.accuracy >= 80 ? <CheckCircle2 className="h-3 w-3" /> : r.accuracy >= 50 ? <AlertCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                                {r.accuracy >= 80 ? 'Good' : r.accuracy >= 50 ? 'Needs Work' : 'Poor'}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {progress.status === 'error' && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-red-600">
+                <XCircle className="h-5 w-5" />
+                <span className="font-medium">Test failed: {progress.error}</span>
+              </div>
+              <Button variant="secondary" size="sm" onClick={handleReset}>
+                Try Again
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -177,6 +501,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Model Accuracy Section */}
+      <div ref={resultsRef} />
       {accuracyHistory && accuracyHistory.length > 0 && (
         <>
           {/* Accuracy Summary Cards */}

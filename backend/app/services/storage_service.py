@@ -10,8 +10,8 @@ from app.core.config import settings
 USE_LOCAL_STORAGE = settings.ENVIRONMENT == 'development' and settings.AWS_ACCESS_KEY_ID == 'test'
 
 if USE_LOCAL_STORAGE:
-    # Local file storage for development
-    LOCAL_STORAGE_PATH = Path('/tmp/leasebee_uploads')
+    # Local file storage for development — project-relative so files survive reboots
+    LOCAL_STORAGE_PATH = Path(__file__).resolve().parents[2] / 'uploads'
     LOCAL_STORAGE_PATH.mkdir(parents=True, exist_ok=True)
 else:
     # S3 storage for production
